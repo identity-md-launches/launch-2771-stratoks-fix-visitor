@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
 import { once } from 'node:events';
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { startExpanse } from '../server/src/expanse/server.js';
 import { VisitorAuth } from '../server/src/expanse/visitor-auth.js';
 import { addressFromPrivateKey, signForTests } from '../server/src/wallet.js';
@@ -70,7 +70,7 @@ test('real HTTP challenge/signature/login/session/logout; private profile surviv
 });
 
 test('HTTP rejects wrong signer/address/chain/message/origin, replay and expiry', async (t) => {
-  const a = await app(t, { nonceTtlMs: 1000, sessionTtlMs: 2000 });
+  const a = await app(t, { nonceTtlMs: 1000, sessionTtlMs: 2000, perPeerSignups: 100 });
   for (const [change, expected, from] of [
     [(p) => ({ ...p, signature: signForTests(p.message, otherKey) }), 'wrong_signer'],
     [(p) => ({ ...p, address: otherAddress }), 'address_mismatch'],
@@ -97,14 +97,15 @@ test('HTTP rejects wrong signer/address/chain/message/origin, replay and expiry'
 test('cancel pending or completed challenge safely revokes late authentication', async (t) => {
   const a = await app(t);
   let c = (await a.nonce()).body;
-  assert.equal((await a.request('/api/auth/logout', { nonce: c.nonce }, undefined, preview)).status, 403);
-  assert.equal((await a.request('/api/auth/logout', { nonce: c.nonce })).status, 200);
+  assert.equal((await a.request('/api/auth/logout', { nonce: c.nonce, cancellationSecret: c.cancellationSecret }, undefined, preview)).status, 403);
+  assert.equal((await a.request('/api/auth/logout', { nonce: c.nonce, cancellationSecret: '0'.repeat(64) })).status, 403);
+  assert.equal((await a.request('/api/auth/logout', { nonce: c.nonce, cancellationSecret: c.cancellationSecret })).status, 200);
   assert.equal((await a.request('/api/auth/verify', a.proof(c))).status, 401);
   c = (await a.nonce()).body;
   const s = await a.request('/api/auth/verify', a.proof(c)); assert.equal(s.status, 200);
-  assert.equal((await a.request('/api/auth/logout', { nonce: c.nonce })).status, 200);
+  assert.equal((await a.request('/api/auth/logout', { nonce: c.nonce, cancellationSecret: c.cancellationSecret })).status, 200);
   assert.equal((await a.request('/api/auth/session', undefined, s.body.token)).status, 401);
-  assert.equal((await a.request('/api/auth/logout', { nonce: c.nonce })).status, 200);
+  assert.equal((await a.request('/api/auth/logout', { nonce: c.nonce, cancellationSecret: c.cancellationSecret })).status, 200);
 });
 
 test('malformed input, bounded bodies, exact CORS and method isolation', async (t) => {
@@ -128,21 +129,46 @@ test('malformed input, bounded bodies, exact CORS and method isolation', async (
 });
 
 test('bounded nonce/session/profile stores and expiry garbage collection', async (t) => {
-  const a = await app(t, { maxNonces: 1, maxSessions: 1, maxProfiles: 1, nonceTtlMs: 500, sessionTtlMs: 1000 });
+  const a = await app(t, { maxNonces: 1, maxSessions: 1, maxProfiles: 1, nonceTtlMs: 500, sessionTtlMs: 1000, profileRetentionMs: 500, perPeerRequests: 100, perPeerSignups: 100 });
   const c = (await a.nonce()).body; assert.equal((await a.nonce()).body.error, 'nonce_store_full');
   const s = await a.request('/api/auth/verify', a.proof(c)); assert.equal(s.status, 200);
   assert.equal((await a.login()).body.error, 'session_store_full');
   assert.equal((await a.request('/api/auth/logout', {}, s.body.token)).status, 200);
   assert.equal((await a.login(otherAddress, otherKey)).body.error, 'profile_store_full');
-  assert.equal((await a.login()).status, 200);
+  a.advance(500); const other = await a.login(otherAddress, otherKey); assert.equal(other.status, 200); assert.equal(a.svc.auth.profiles.has(address), false);
+  await a.request('/api/auth/logout', {}, other.body.token);
+  assert.equal((await a.login()).body.error, 'profile_store_full'); a.advance(500); assert.equal((await a.login()).status, 200);
   a.advance(1000); a.svc.auth.gc(); assert.equal(a.svc.auth.sessions.size, 0);
   assert.equal((await a.nonce()).status, 200); a.advance(500); a.svc.auth.gc(); assert.equal(a.svc.auth.nonces.size, 0);
+});
+
+test('forwarded client addresses are accepted only from explicitly trusted peers', async (t) => {
+  const a = await app(t, { trustedProxies: ['127.0.0.1'] });
+  const auth = a.svc.auth;
+  const req = (peer, header) => ({ socket: { remoteAddress: peer }, headers: { 'x-forwarded-for': header } });
+  assert.equal(auth.clientAddress(req('127.0.0.1', '198.51.100.7')), '198.51.100.7');
+  assert.equal(auth.clientAddress(req('198.51.100.8', '198.51.100.7')), '198.51.100.8');
+  assert.equal(auth.clientAddress(req('127.0.0.1', 'bad value')), '127.0.0.1');
+});
+
+test('50 authenticated polling sessions do not consume sign-in peer quota', async (t) => {
+  const a = await app(t, { perIpRequests: 2, perPeerSignups: 2 });
+  const auth = a.svc.auth;
+  const tokens = Array.from({ length: 50 }, () => randomBytes(32).toString('hex'));
+  tokens.forEach((token, i) => auth.sessions.set(createHash('sha256').update(token).digest('hex'), {
+    address: `0x${String(i + 1).padStart(40, '0')}`, chainId: 1, origin, world: auth.world, uri, role: 'visitor', expiresAt: Date.now() + 60_000,
+  }));
+  for (const token of tokens) assert.equal((await a.request('/api/auth/session', undefined, token)).status, 200);
+  const challenge = (await a.nonce()).body;
+  assert.equal((await a.request('/api/auth/verify', a.proof(challenge))).status, 200);
 });
 
 test('per-peer/global rates and bounded rate-key map reject without affecting world', async (t) => {
   const a = await app(t, { perIpRequests: 2, rateWindowMs: 1000 });
   assert.equal((await a.request('/api/auth/config')).status, 200); assert.equal((await a.request('/api/auth/config')).status, 200);
-  const limited = await a.request('/api/auth/config'); assert.equal(limited.status, 429); assert.equal(limited.headers.get('retry-after'), '1');
+  assert.equal((await a.request('/api/auth/config')).status, 200);
+  await a.nonce(); await a.nonce();
+  const limited = await a.nonce(); assert.equal(limited.status, 429); assert.equal(limited.headers.get('retry-after'), '1');
   assert.equal((await a.request('/api/expanse/info')).status, 200);
   a.advance(1000); assert.equal((await a.request('/api/auth/config')).status, 200);
   const auth = a.svc.auth; auth.rates.clear(); auth.cfg.maxRateKeys = 1;

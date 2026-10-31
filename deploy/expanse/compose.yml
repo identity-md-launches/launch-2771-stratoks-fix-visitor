@@ -12,6 +12,7 @@ services:
       AUTH_URI: "${AUTH_URI:-}"
       AUTH_ALLOWED_ORIGINS: "${AUTH_ALLOWED_ORIGINS:-}"
       AUTH_CHAINS: "${AUTH_CHAINS:-1}"
+      AUTH_TRUSTED_PROXIES: "${AUTH_TRUSTED_PROXIES:-}"
     volumes: [ "expanse-data:/data" ]
     ports: [ "127.0.0.1:8788:8788" ]
     cpus: 1.5

@@ -52,7 +52,7 @@ export function startExpanse({ dataDir, seed, tickMs = 1000, saveEveryTicks = 30
 if (import.meta.url === `file://${process.argv[1]}`) {
   const env = process.env;
   const svc = startExpanse({ dataDir: env.EXPANSE_DATA_DIR ?? './data-expanse', seed: Number(env.WORLD_SEED ?? 20260101), tickMs: Number(env.TICK_MS ?? 1000), port: Number(env.PORT ?? 8788), host: env.HOST ?? '0.0.0.0',
-    auth: env.AUTH_URI ? { uri: env.AUTH_URI, allowedOrigins: (env.AUTH_ALLOWED_ORIGINS ?? '').split(',').filter(Boolean), chains: (env.AUTH_CHAINS ?? '1').split(',').map(Number), localDemo: env.AUTH_LOCAL_DEMO === 'true' } : null,
+    auth: env.AUTH_URI ? { uri: env.AUTH_URI, allowedOrigins: (env.AUTH_ALLOWED_ORIGINS ?? '').split(',').filter(Boolean), trustedProxies: (env.AUTH_TRUSTED_PROXIES ?? '').split(',').filter(Boolean), chains: (env.AUTH_CHAINS ?? '1').split(',').map(Number), localDemo: env.AUTH_LOCAL_DEMO === 'true' } : null,
     initialCount: Number(env.INITIAL_SEED_COUNT ?? 24), allowedOrigins: (env.ALLOWED_ORIGINS ?? '').split(',').filter(Boolean) });
   if (svc.authUnavailable) console.error('Visitor authentication unavailable: check AUTH_URI, exact origins/chains and the private profile store. Anonymous viewing continues. See docs/auth/SETUP.md.');
   for (const s of ['SIGINT', 'SIGTERM']) process.on(s, () => svc.stop().then(() => process.exit(0)));

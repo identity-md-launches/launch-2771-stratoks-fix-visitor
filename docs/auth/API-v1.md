@@ -1,6 +1,6 @@
 # Expanse visitor authentication API v1
 
-This contract belongs to `server/src/expanse/server.js`, **not** the legacy service on port 8787. World routes remain GET/HEAD only; auth gives no gameplay, reset, payment or developer privileges. All verified accounts have `role: "visitor"`. Connecting a provider, sending an address, or restoring browser storage never authenticates anyone. Only server-verified EIP-191 signatures do.
+This contract belongs to `server/src/expanse/server.js`, not the legacy service. World routes remain GET/HEAD only; auth gives no gameplay, reset, payment or developer privileges. All verified accounts have `role: "visitor"`. Connecting a provider, sending an address, or restoring browser storage never authenticates anyone. Only server-verified EIP-191 signatures do.
 
 ## Transport and origin scope
 
@@ -23,11 +23,11 @@ Reserved prefix: `/api/auth`. No query strings are accepted, even on config. Unk
 | POST `/api/auth/verify` | `{nonce,address,chainId,message,signature}` | `{version:1,token,address,chainId,origin,world,uri,role:"visitor",expiresAt,profile}` |
 | GET `/api/auth/session` | Bearer + origin; no body | Same session fields and current private profile, **without token** |
 | POST `/api/auth/logout` | Bearer + origin, body `{}` | `{version:1,loggedOut:true}`; idempotently revokes that token, including if already expired/revoked |
-| POST `/api/auth/logout` | Body `{nonce}`, origin, bearer optional | Same result; cancels a pending challenge or revokes a session already minted from it. Idempotent for unknown/used nonces. Designed for account/network changes and in-flight cancellations. |
+| POST `/api/auth/logout` | Body `{nonce,cancellationSecret}`, origin, bearer optional | Same result; cancels a pending challenge or revokes a session already minted from it. Secret is random, separate from the signed/public nonce, and required to revoke by challenge. |
 
 `config` when enabled: `{version:1,enabled:true,uri,domain,world,chains,nonceTtlMs,sessionTtlMs,transport:"memory-bearer",sessionsSurviveRestart:false}`. It is public metadata, never an authentication result. URI/domain/world/chains must be validated before signing. `world` binds a durable random service identity to a hash of the snapshot identity, additionally scoped to the configured URI. A separate deployment must have its own data directory/URI; do not copy private service identity into another installation.
 
-`nonce` response: `{version:1,address,domain,origin,uri,world,chainId,nonce,issuedAt,expiresAt,message}`. Nonce is 32 cryptographically random bytes encoded as 64 lowercase hex characters. Every issuance is fresh. The exact message comes from [`shared/visitor-challenge.js`](../../shared/visitor-challenge.js):
+`nonce` response adds `cancellationSecret`, another independent 32 random bytes encoded as lowercase hex; it is never included in the signed message. Keep it in memory and submit it only for pending/late challenge cancellation. The public nonce alone cannot revoke an established session. Nonce response otherwise contains `{version:1,address,domain,origin,uri,world,chainId,nonce,issuedAt,expiresAt,message}`. Every issuance is fresh.
 
 ```text
 <domain> wants you to sign in to STRATOKS with your Ethereum account:
@@ -53,15 +53,15 @@ Verification consumes an existing nonce before checking the signature, even on w
 
 Profiles are private `{address,firstVerifiedAt,lastVerifiedAt,visitCount}`. A visit means successful cryptographic verification, not connection, HTTP refresh, unique person, resident recognition or social memory. Lost responses can still count a verified visit. They are independent of world time. Updates use a same-directory exclusive temporary file, mode 0600, file fsync, atomic rename and directory fsync, in a mode 0700 private directory. No sessions/signatures/nonces are persisted. Sessions and pending challenges end on process restart. Profile history and service scope survive restart. No resident/entity/world schema is extended.
 
-Client integration must clear auth immediately on `accountsChanged`, `chainChanged`, provider disconnect, backend/world changes and expiry. Send nonce cancellation (or token logout for completed sessions); discard all responses from earlier attempts/worlds. The provided controller uses a generation counter and checks provider state again before verify. Account/network change cancellation is effective regardless of whether logout reaches the server before or after verification. On timeout, decline or locked provider, release the busy UI and offer retry. A timed-out wallet prompt may remain open in the wallet; any later signature belongs to the cancelled nonce.
+Client integration must clear auth immediately on `accountsChanged`, `chainChanged`, provider disconnect, backend/world changes and expiry. Send secret-protected cancellation (or token logout for completed sessions); discard all responses from earlier attempts/worlds. On timeout, decline or locked provider, release the busy UI and offer retry. A timed-out wallet prompt may remain open in the wallet; any later signature belongs to the cancelled nonce.
 
-Explicit logout must receive the server's success response before displaying "Signed out on the server." If offline, clear local authentication immediately, retain pending revocation only in memory, and report that server logout needs retry. After tab close, offline revocation cannot be guaranteed; the old credential expires within its fixed TTL or on backend restart. Session refresh receiving 401 means expired/revoked/restarted; show sign-in again. The shared client also clears verification when refresh is unavailable rather than claiming ongoing verification.
+Explicit logout must receive the server's success response before displaying "Signed out on the server." If offline, clear local authentication immediately, retain pending revocation only in memory, and report that server logout needs retry. After tab close, offline revocation cannot be guaranteed; the old credential expires within its fixed TTL or on backend restart. Session refresh 401/403 is authoritative invalidation. Network errors, timeout, 429 and 5xx retain the credential, show unavailable/unverified, and retry with bounded jittered backoff; they never claim a fresh verification.
 
 ## Bounds, errors and OPTIONS
 
-Default bounds: 120s nonce lifetime, 1h fixed session lifetime (no sliding extension), 1000 pending nonces, 2000 sessions, 10,000 private addresses, 8192 bytes per POST and 5s body deadline. Capacity comparisons use `>=`; no eviction of valid sessions/profiles to make room. Expired nonces/sessions and rate buckets are collected per request and every 30s independently of viewers. Profile count is bounded permanently; owner must plan retention/offline archival if full. Startup refuses private stores over 8 MiB or invalid schemas/records and disables login while preserving anonymous viewing.
+Default bounds: 120s nonce lifetime, 1h fixed session lifetime, 1000 pending nonces, 2000 sessions, 3 sessions/address, 500 sessions/origin, 10,000 private profiles, and 90-day inactivity retention. Expired inactive profiles are evicted atomically when capacity requires it; active records are retained, and admission is refused if all slots remain active. This retention is disclosed to owners; identity is not Sybil-proof. Auth concurrency is capped at 128 requests; POST bodies are limited to 8192 bytes and 5s. Startup refuses private stores over 8 MiB or invalid schemas/records and disables login while preserving anonymous viewing.
 
-Per 60s fixed window: 60 auth requests per TCP peer and 600 globally, at most 1000 peer buckets. Includes config/preflight/failures on known auth paths. Forwarded IP headers are ignored to prevent spoofing. Behind a reverse proxy all visitors may share one peer allowance: this deliberately conservative default can limit a busy site. Configure audited ingress rate limits/peer handling before raising programmatic limits. Limits can be overridden through `startExpanse({auth:{...limits}})` for local tests/owner integration; CLI uses the defaults. Expanse ticking is unaffected by auth quota exhaustion. Server header/request deadlines also bound slow HTTP clients.
+Per 60s fixed window: challenge/verify are limited to 60 requests per peer and 600 globally, with at most 1000 rate buckets; challenge creation additionally allows 10 starts per peer/window. Session polling uses the global ceiling but not the shared sign-in peer bucket. Forwarded headers are trusted only when the socket peer exactly matches `AUTH_TRUSTED_PROXIES`; Caddy must overwrite `X-Forwarded-For` with `{remote_host}` and the backend must remain private. Otherwise socket peer is used. See owner setup for routing.
 
 Errors are JSON `{version:1,error:<code>}`. Representative statuses:
 
@@ -72,8 +72,8 @@ Errors are JSON `{version:1,error:<code>}`. Representative statuses:
 | 403 | `origin_required`, `origin_not_allowed`, `origin_mismatch`, `session_scope_mismatch`, `preflight_not_allowed` |
 | 404/405 | Unknown route / method not allowed (Allow header) |
 | 408/413/415 | `body_timeout` / `body_too_large` / `json_required` |
-| 429 | `rate_limited`, `rate_store_full`, `nonce_store_full`, `session_store_full`, `profile_store_full`; bounded `Retry-After` in seconds (profile capacity requires owner maintenance) |
-| 503 | `auth_unavailable`, `profile_store_unavailable` |
+| 429 | `rate_limited`, `signup_rate_limited`, `rate_store_full`, `nonce_store_full`, `session_store_full`, `profile_store_full`; bounded `Retry-After` in seconds |
+| 503 | `auth_unavailable`, `auth_busy`, `profile_store_unavailable` |
 
 GC may remove an expired nonce first, yielding `unknown_or_used_nonce` instead of `nonce_expired`; both require a new challenge. Unknown internal errors return generic `auth_unavailable`, without paths, stack traces or credentials. A profile filesystem failure returns 503 and issues no token.
 

@@ -28,7 +28,7 @@ export class VisitorAuthClient implements AuthSnapshot {
   session: VisitorSession | null; config: AuthConfig | null; busy: boolean;
   revocations: Set<unknown>;
   pendingRequests: number; activeAttempts: number;
-  challenge: { message: string } | null;
+  challenge: { message: string; cancellationSecret: string } | null;
   connect(provider: Provider): Promise<void>;
   loadConfig(): Promise<AuthConfig>;
   signIn(): Promise<void>;

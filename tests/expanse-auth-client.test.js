@@ -47,6 +47,18 @@ test('client uses actual HTTP crypto verification and server logout; connecting 
   await client.signIn(); assert.equal(client.state, 'verified'); assert.equal(client.session.profile.visitCount, 3);
 });
 
+test('transient session-check errors retain credentials, deduplicate checks and recover without false verification', async (t) => {
+  const { client } = await app(t, { timeoutMs: 5000 }); await client.signIn(); assert.ok(client.session, client.error);
+  const session = client.session, native = client.fetch; let calls = 0;
+  client.fetch = async (...args) => {
+    if (args[0].endsWith('/session')) { calls++; await delay(25); return new Response('{"error":"rate_limited"}', { status: 429, headers: { 'content-type': 'application/json', 'retry-after': '2' } }); }
+    return native(...args);
+  };
+  await Promise.all([client.refreshSession(), client.refreshSession(), client.refreshSession()]);
+  assert.equal(calls, 1); assert.equal(client.session.token, session.token); assert.equal(client.state, 'unavailable');
+  client.fetch = native; await client.refreshSession(); assert.equal(client.session.token, session.token); assert.equal(client.state, 'verified');
+});
+
 test('account switch mid-signature cannot authenticate old or new account; retry recovers', async (t) => {
   const { client, wallet, svc } = await app(t);
   const gate = deferred(), entered = deferred(); wallet.sign = async (message) => { entered.resolve(); await gate.promise; return signForTests(message, wallet.key); };
@@ -204,9 +216,9 @@ test('silent account switch while verify is in flight rejects and revokes its re
   assert.match(client.error, /account or network changed/);
 });
 
-test('capability world changes and malformed current-session replies end verification', async (t) => {
+test('capability world changes invalidate and malformed current-session replies become unverified', async (t) => {
   const { client, svc } = await app(t); await client.signIn(); const old = client.session.token;
-  svc.auth.world += ':replacement';
+  svc.auth.world = svc.auth.world.replace(/[0-9a-f]{64}$/, 'a'.repeat(64));
   await client.loadConfig(); await client.retryRevocations();
   assert.equal(client.session, null); assert.match(client.error, /world service changed/);
   assert.throws(() => svc.auth.session(old, origin));
@@ -218,8 +230,9 @@ test('capability world changes and malformed current-session replies end verific
     const body = await response.json(); body.chainId = 8453;
     return new Response(JSON.stringify(body));
   };
-  await client.refreshSession(); await client.retryRevocations();
-  assert.equal(client.state, 'expired'); assert.equal(client.session, null);
+  const retained = client.session.token;
+  await client.refreshSession();
+  assert.equal(client.state, 'unavailable'); assert.equal(client.session.token, retained);
 });
 
 test('late logout acknowledgement cannot overwrite a newer verified account state', async (t) => {

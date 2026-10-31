@@ -1,9 +1,19 @@
-# Terminates TLS (HTTPS + WSS) and proxies to the world container. Needs a DNS A/AAAA record for $SERVER_HOSTNAME.
+# Terminates TLS and routes the Expanse API to the private 8788 backend. Bind that backend to loopback/private networking only.
 {$SERVER_HOSTNAME} {
 	encode zstd gzip
-	reverse_proxy world:8787 {
-		# Overwrite (never append to) any client-supplied X-Forwarded-For: the world server rate-limits on the
-		# right-most entry, so this makes it exactly the TCP peer Caddy saw. Spoofed headers are discarded.
-		header_up X-Forwarded-For {remote_host}
+	handle /api/auth/* {
+		reverse_proxy 127.0.0.1:8788 {
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+	handle /api/expanse/* {
+		reverse_proxy 127.0.0.1:8788
+	}
+	handle /healthz {
+		reverse_proxy 127.0.0.1:8788
+	}
+	handle {
+		root * /srv/stratoks/dist
+		file_server
 	}
 }

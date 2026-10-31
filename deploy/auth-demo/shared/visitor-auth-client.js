@@ -4,6 +4,7 @@ import { challengeMessage } from './visitor-challenge.js';
 const validAddress = (a) => typeof a === 'string' && /^0x[0-9a-fA-F]{40}$/.test(a);
 const addressOf = (accounts) => Array.isArray(accounts) && validAddress(accounts[0]) ? accounts[0].toLowerCase() : null;
 const chainOf = (s) => typeof s === 'string' && /^0x[0-9a-f]+$/i.test(s) && Number.isSafeInteger(Number(s)) ? Number(s) : null;
+const validWorldScope = (v) => typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:[0-9a-f]{64}$/.test(v);
 
 export function discoverWallets(target = window, legacy = target.ethereum) {
   const wallets = [], listeners = new Set();
@@ -21,7 +22,8 @@ export function discoverWallets(target = window, legacy = target.ethereum) {
 }
 
 export function validateChallenge(c, cfg, { address, chainId, origin, uri, now = Date.now() }) {
-  if (!c || c.version !== 1 || c.address !== address || c.chainId !== chainId || !cfg.chains.includes(chainId) || c.origin !== origin || c.uri !== uri || c.domain !== new URL(uri).host || c.world !== cfg.world || !/^[0-9a-f]{64}$/.test(c.nonce) || !Number.isSafeInteger(c.issuedAt) || !Number.isSafeInteger(c.expiresAt) || c.issuedAt > now + 30_000 || c.issuedAt < now - cfg.nonceTtlMs || c.expiresAt <= now || c.expiresAt - c.issuedAt !== cfg.nonceTtlMs || c.message !== challengeMessage(c)) throw new Error('Mismatched sign-in challenge. No signature requested.');
+  const safe = (v, max) => typeof v === 'string' && v.length <= max && !/[\u0000-\u001f\u007f]/.test(v);
+  if (!c || c.version !== 1 || c.address !== address || c.chainId !== chainId || !cfg.chains.includes(chainId) || c.origin !== origin || c.uri !== uri || c.domain !== new URL(uri).host || c.world !== cfg.world || !validWorldScope(c.world) || !safe(c.domain, 253) || !safe(c.origin, 512) || !safe(c.uri, 512) || !/^[0-9a-f]{64}$/.test(c.cancellationSecret ?? '') || !/^[0-9a-f]{64}$/.test(c.nonce) || !Number.isSafeInteger(c.issuedAt) || !Number.isSafeInteger(c.expiresAt) || c.issuedAt > now + 30_000 || c.issuedAt < now - cfg.nonceTtlMs || c.expiresAt <= now || c.expiresAt - c.issuedAt !== cfg.nonceTtlMs || c.message !== challengeMessage(c)) throw new Error('Mismatched sign-in challenge. No signature requested.');
 }
 
 export class VisitorAuthClient {
@@ -32,7 +34,7 @@ export class VisitorAuthClient {
     this.generation = 0; this.state = 'disconnected'; this.error = ''; this.provider = null;
     this.address = null; this.chainId = null; this.session = null; this.config = null; this.pendingNonce = null;
     this.busy = false; this.cleanup = () => {}; this.expiryTimer = null; this.revocations = new Set();
-    this.challenge = null;
+    this.challenge = null; this.cancellationSecret = null; this.refreshing = null; this.retryTimer = null; this.retryAttempt = 0;
     this.pendingRequests = 0; this.activeAttempts = 0;
   }
   emit(state = this.state, error = '') { this.state = state; this.error = error; this.onChange({ state, error, address: this.address, chainId: this.chainId, session: this.session, busy: this.busy }); }
@@ -49,10 +51,16 @@ export class VisitorAuthClient {
       const r = await this.fetch(`${this.baseUrl}/api/auth/${route}`, { method: body === undefined ? 'GET' : 'POST',
         credentials: 'omit', cache: 'no-store', redirect: 'error', signal: controller.signal,
         headers: { 'X-Stratoks-Origin': this.origin, ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}), ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
-      const data = await r.json();
+      const data = await r.json().catch(() => ({}));
       if (!r.ok) {
         const e = new Error(data.error ?? `Backend returned ${r.status}`);
         e.status = r.status;
+        const retryAfter = r.headers?.get?.('retry-after');
+        if (retryAfter) {
+          const seconds = Number(retryAfter);
+          const dateMs = Number.isFinite(seconds) ? seconds * 1000 : Date.parse(retryAfter) - Date.now();
+          if (Number.isFinite(dateMs) && dateMs > 0) e.retryAfterMs = Math.min(60_000, dateMs);
+        }
         throw e;
       }
       return data;
@@ -70,10 +78,11 @@ export class VisitorAuthClient {
   invalidate(reason = '', state = this.address ? 'connected' : 'disconnected') {
     ++this.generation; this.busy = false;
     clearTimeout(this.expiryTimer);
-    const old = this.session, nonce = this.pendingNonce;
+    const old = this.session, nonce = this.pendingNonce, cancellationSecret = this.cancellationSecret;
     this.session = null; this.pendingNonce = null; this.challenge = null;
+    this.cancellationSecret = null; clearTimeout(this.retryTimer); this.retryAttempt = 0;
     const generation = this.generation;
-    if (old || nonce) this.revoke(nonce ? { nonce } : {}, old?.token).catch(() => {
+    if (old || nonce) this.revoke(nonce ? { nonce, cancellationSecret } : {}, old?.token).catch(() => {
       if (generation === this.generation) this.emit(this.state, 'Authentication cleared locally. Server revocation pending; reconnect and retry logout. Sessions also expire or end on server restart.');
     });
     this.emit(state, reason);
@@ -82,7 +91,7 @@ export class VisitorAuthClient {
     const generation = this.generation;
     try {
       const c = await this.request('config');
-      if (c.enabled !== true || c.version !== 1 || c.uri !== this.uri || c.domain !== new URL(this.uri).host || typeof c.world !== 'string' || c.world.length > 256 || !c.world || !Array.isArray(c.chains) || !c.chains.length || c.chains.length > 16 || c.chains.some((n) => !Number.isSafeInteger(n) || n <= 0) || !Number.isSafeInteger(c.nonceTtlMs) || c.nonceTtlMs < 1 || c.nonceTtlMs > 120_000 || !Number.isSafeInteger(c.sessionTtlMs) || c.sessionTtlMs < 1 || c.sessionTtlMs > 100_000_000 || c.sessionsSurviveRestart !== false || c.transport !== 'memory-bearer') throw new Error('This backend does not offer compatible visitor sign-in.');
+      if (c.enabled !== true || c.version !== 1 || c.uri !== this.uri || c.domain !== new URL(this.uri).host || !validWorldScope(c.world) || !Array.isArray(c.chains) || !c.chains.length || c.chains.length > 16 || c.chains.some((n) => !Number.isSafeInteger(n) || n <= 0) || !Number.isSafeInteger(c.nonceTtlMs) || c.nonceTtlMs < 1 || c.nonceTtlMs > 120_000 || !Number.isSafeInteger(c.sessionTtlMs) || c.sessionTtlMs < 1 || c.sessionTtlMs > 100_000_000 || c.sessionsSurviveRestart !== false || c.transport !== 'memory-bearer') throw new Error('This backend does not offer compatible visitor sign-in.');
       if (generation === this.generation) {
         if (this.config && this.config.world !== c.world) this.invalidate('The world service changed. Sign in again.');
         this.config = c;
@@ -131,7 +140,8 @@ export class VisitorAuthClient {
       if (!current()) return;
       if (!config.chains.includes(chainId)) throw new Error(`Unsupported network. Select chain ${config.chains.join(' or ')} in your wallet, then retry.`);
       const c = await this.request('nonce', { address, chainId }); nonce = c.nonce;
-      if (!current()) { await this.revoke({ nonce }); return; }
+      this.cancellationSecret = c.cancellationSecret;
+      if (!current()) { await this.revoke({ nonce, cancellationSecret: c.cancellationSecret }); return; }
       this.pendingNonce = nonce;
       validateChallenge(c, config, { address, chainId, origin: this.origin, uri: this.uri });
       this.challenge = c; this.emit('signing');
@@ -152,19 +162,29 @@ export class VisitorAuthClient {
       this.expiryTimer = setTimeout(() => this.invalidate('Session expired. Sign in again.', 'expired'), Math.max(0, result.expiresAt - Date.now()));
       this.emit('verified');
     } catch (e) {
-      if (nonce) await this.revoke({ nonce }).catch(() => {});
+      if (nonce) await this.revoke({ nonce, cancellationSecret: this.cancellationSecret }).catch(() => {});
       if (current()) { this.pendingNonce = null; this.session = null; this.challenge = null; this.emit(this.config ? 'connected' : 'unavailable', e.code === 4001 ? 'Signature declined. You can retry.' : e.message); }
     } finally { this.activeAttempts--; if (current()) { this.busy = false; this.emit(this.state, this.error); } }
   }
   async refreshSession() {
-    if (!this.session) return;
+    if (!this.session || this.refreshing) return this.refreshing;
     const generation = this.generation;
     const previous = this.session;
-    try {
-      const s = await this.request('session', undefined, previous.token);
-      for (const k of ['version', 'address', 'chainId', 'origin', 'world', 'uri', 'role', 'expiresAt']) if (s[k] !== previous[k]) throw new Error('Mismatched session response');
-    }
-    catch (e) { if (generation === this.generation) this.invalidate(`Verification ended or backend unavailable: ${e.message}. Sessions end on server restart.`, 'expired'); }
+    this.refreshing = (async () => {
+      try {
+        const s = await this.request('session', undefined, previous.token);
+        for (const k of ['version', 'address', 'chainId', 'origin', 'world', 'uri', 'role', 'expiresAt']) if (s[k] !== previous[k]) throw new Error('Mismatched session response');
+        if (generation === this.generation) { this.retryAttempt = 0; this.emit('verified'); }
+      } catch (e) {
+        if (generation !== this.generation) return;
+        if (e.status === 401) { this.invalidate('Session was rejected by the server. Sign in again.', 'expired'); return; }
+        this.emit('unavailable', 'Session status temporarily unavailable. Your credential is retained; retrying.');
+        const backoff = Math.min(30_000, 1000 * 2 ** Math.min(this.retryAttempt++, 5));
+        const delay = e.retryAfterMs ? Math.min(60_000, e.retryAfterMs + Math.random() * Math.min(5_000, e.retryAfterMs * 0.2)) : backoff * (0.75 + Math.random() * 0.5);
+        this.retryTimer = setTimeout(() => { if (generation === this.generation) this.refreshSession(); }, delay);
+      } finally { this.refreshing = null; }
+    })();
+    return this.refreshing;
   }
   async logout() {
     this.invalidate();
