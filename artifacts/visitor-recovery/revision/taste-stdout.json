@@ -1,0 +1,116 @@
+{
+ "checks": [
+  {
+   "name": "render",
+   "passed": true,
+   "exitCode": 0,
+   "durationMs": 11125,
+   "output": "renders, no script errors or missing local files"
+  },
+  {
+   "name": "layout",
+   "passed": true,
+   "exitCode": 0,
+   "durationMs": 0,
+   "output": "no horizontal scroll at 320, 390 or 1440\nno text box overlaps another\nno floating control covers text\nno text cut off by overflow: hidden"
+  },
+  {
+   "name": "targets",
+   "passed": true,
+   "exitCode": 0,
+   "durationMs": 0,
+   "output": "all 17 controls at least 24px or spaced at 390\n12 under the 44px comfortable size"
+  },
+  {
+   "name": "contrast",
+   "passed": true,
+   "exitCode": 0,
+   "durationMs": 0,
+   "output": "all measured text meets 4.5:1 (3:1 large)\n18 text boxes over images, video, canvas or gradients not measured"
+  },
+  {
+   "name": "casing",
+   "passed": true,
+   "exitCode": 0,
+   "durationMs": 0,
+   "output": "no all-caps text in content"
+  },
+  {
+   "name": "tracking",
+   "passed": true,
+   "exitCode": 0,
+   "durationMs": 0,
+   "output": "letter-spacing natural in content (display type may run tight)"
+  },
+  {
+   "name": "eyebrows",
+   "passed": true,
+   "exitCode": 0,
+   "durationMs": 1,
+   "output": "no kicker labels above headings"
+  },
+  {
+   "name": "type-sizes",
+   "passed": true,
+   "exitCode": 0,
+   "durationMs": 0,
+   "output": "390: 1 sizes in use, 3 with one-offs (12px×14, 14px×1, 24px×1)\n1440: 2 sizes in use, 3 with one-offs (12px×19, 14px×3, 32px×1)\nbar: 6 sizes used more than once, 8 counting one-offs, per width"
+  },
+  {
+   "name": "type-faces",
+   "passed": true,
+   "exitCode": 0,
+   "durationMs": 0,
+   "output": "families (2): manrope variable, georgia\nweights (2): 400, 600"
+  },
+  {
+   "name": "glyphs",
+   "passed": true,
+   "exitCode": 0,
+   "durationMs": 0,
+   "output": "no em dashes or emoji in text"
+  },
+  {
+   "name": "slogans",
+   "passed": true,
+   "exitCode": 0,
+   "durationMs": 0,
+   "output": "no two-beat taglines"
+  },
+  {
+   "name": "repetition",
+   "passed": true,
+   "exitCode": 0,
+   "durationMs": 2,
+   "output": "no repeated lines"
+  },
+  {
+   "name": "copy-budget",
+   "passed": true,
+   "exitCode": 0,
+   "durationMs": 1,
+   "output": "prose on the first screen: 13 words at 390 (bar 60), 24 at 1440 (bar 90)\nall words on the first screen: 40 at 390, 63 at 1440\nwhole page: 63 words, 24 of them prose"
+  },
+  {
+   "name": "chrome",
+   "passed": true,
+   "exitCode": 0,
+   "durationMs": 0,
+   "output": "border and shadow together: 0\ncards inside cards: 0\ngradient text: 0"
+  },
+  {
+   "name": "motion",
+   "passed": true,
+   "exitCode": 0,
+   "durationMs": 0,
+   "output": "transition: all on 0 elements\nendless animations: 0; still running with reduced motion: 0"
+  },
+  {
+   "name": "share",
+   "passed": true,
+   "exitCode": 0,
+   "durationMs": 1,
+   "output": "title \"STRATOKS · A world taking root\", favicon, og:title, og:image, description"
+  }
+ ]
+}

@@ -8,6 +8,8 @@ The eight-finding resolution table, actual test results, raw evidence, screensho
 
 The current HUD offers **Connect wallet**, explicit message sign-in and server-confirmed sign-out through the Expanse visitor API. Connection alone never authenticates you. Temporary session-check failures now retain the credential while showing **Session unconfirmed**, retry automatically, and keep sign-out available. Accounts are optional, private visitor records; they give no simulation controls, resident recognition or social memories. The [session recovery validation](artifacts/visitor-recovery/VALIDATION.md) contains this revision's results, screenshots, finding-to-fix matrix and limits. [API v1](docs/auth/API-v1.md) and [owner setup/rollback](docs/auth/SETUP.md) describe the real backend and exact origin configuration.
 
+Reload forgets this tab’s credential; the server session can remain active until expiry (default one hour) or server restart. **Sign out** and wait for acknowledgment before reloading to end it. At the active-session limit, sign out in another signed-in tab or wait for existing sessions to expire. A one-minute retry does not free those slots. The [reload-copy revision](artifacts/visitor-recovery/revision/VALIDATION.md) reproduces both reports and records the corrected HUD/docs, unchanged server policy, and current results: **248 backend tests, 51 frontend tests, 35 HUD browser scenarios, typecheck/build and 16/16 design checks passed**. Browser wallets were simulated with real disposable signatures; Safari and actual wallets/devices remain unverified.
+
 For an isolated local demonstration of the **actual built HUD** plus real server verification:
 
 ```sh

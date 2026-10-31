@@ -1,0 +1,16 @@
+npm notice run stratoks-client@0.1.0 build
+npm notice run vite build
+vite v8.3.5 building client environment for production...
+transforming...
+[plugin rolldown:vite-resolve] Module "node:fs" has been externalized for browser compatibility, imported by "<frontend-stage-parent>/server/src/config.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+✓ 43 modules transformed.
+rendering chunks...
+computing gzip size...
+../dist/index.html                                         1.18 kB │ gzip:   0.58 kB
+../dist/assets/manrope-latin-wght-normal-DHIcAJRg.woff2   24.83 kB
+../dist/assets/demo.worker-nBCLUSwi.js                   133.03 kB
+../dist/assets/index-5NoqZk_g.css                         64.24 kB │ gzip:  12.79 kB
+../dist/assets/index-CJb5861Y.js                         416.94 kB │ gzip: 120.80 kB
+
+✓ built in 506ms
+Static export copied to dist/.

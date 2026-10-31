@@ -1,0 +1,25 @@
+✔ primitive intentions cannot make a false work/rest/fishing pose (1.625835ms)
+✔ fishing casts only with actual phase and obtainable line; no catch frame is invented (0.623483ms)
+✔ loads and construction follow confirmed inventory/materials instead of destination plans (20.413247ms)
+✔ defect 4: repair phase requires work tool and repair material, never food alone (0.386149ms)
+✔ new activity art needs actual work, local object, input and heat/water (0.730116ms)
+✔ isometric basis points preserve existing coordinates, including negative chunk boundaries (32.18342ms)
+✔ all visible in-world screen samples are covered by the bounded API query at every zoom and aspect (6.843327ms)
+✔ zoom keeps the pointer world coordinate stable, while minimap uses the same world bounds (1.215676ms)
+✔ defect 2: every corner tile can be centred at all supported zooms and aspects (1.162574ms)
+✔ defect 3: connected cliffs expose only drops; water banks and snow use real terrain kinds (5.001267ms)
+✔ terrain picking and query cover all four corners, negative chunks, raised ground, zoom and aspect (76.208845ms)
+✔ off-world and unknown terrain cannot be picked or invented by relief (0.881849ms)
+✔ bounded viewport cache reuses unchanged ticks and invalidates camera, terrain and world identity (20.816947ms)
+✔ worn paint uses reported shelters and adjacent travel without crossing blocked land or water (2.601656ms)
+✔ configuration permits HTTPS subpaths and refuses credentials or mixed content (2.013144ms)
+✔ wire query preserves negative world coordinates and selected creature (0.401918ms)
+✔ incompatible and incoherent frames are not presented as shared state (0.417239ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 667.507913

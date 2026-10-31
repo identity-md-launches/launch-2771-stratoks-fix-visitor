@@ -1,0 +1,39 @@
+{
+  "mode": "inherited export",
+  "providers": "Simulated EIP-6963 and legacy EIP-1193; real randomly generated EOA signatures and real HTTP verification. No extensions/devices.",
+  "checks": [
+    {
+      "name": "reload disclosure distinguishes forgotten credentials from live server sessions",
+      "passed": false,
+      "error": "The input did not match the regular expression /Reload forgets this tab’s credential/. Input:\n\n'Verified on chain 1. This session ends on expiry, reload or server restart.'\n",
+      "ms": 1445
+    },
+    {
+      "name": "reload at the per-address session cap gives truthful recovery and expiry frees capacity",
+      "passed": false,
+      "error": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'The sign-in server is at its request or account limit. Wait a minute and retry; if it continues, ask the world operator.'\n- 'This account or origin has reached its active-session limit. Sign out in another signed-in tab, or wait for existing sessions to expire.'\n",
+      "ms": 3378
+    }
+  ],
+  "errors": [],
+  "measurements": [
+    {
+      "scenario": "reload",
+      "survivingSessions": 1,
+      "oldCredentialHTTP": 200,
+      "reason": "Verified on chain 1. This session ends on expiry, reload or server restart.",
+      "privacy": "Privacy and wallet support\n\nSessions stay only in this tab’s memory and end on expiry, reload or server restart. Private visit history stays on the world server, subject to the owner’s retention policy for inactive visitor records. Resident memory is separate. Login never pauses, resets or advances the simulation.\n\nOnly simulated MetaMask/Rabby-style providers were tested. Actual extensions and mobile devices are untested. Compatible injected EVM account wallets may work. Smart contract wallets, Coinbase Smart Wallet and WalletConnect are not supported by this signature verifier."
+    },
+    {
+      "scenario": "per-address cap after reload",
+      "limit": 3,
+      "sessionTTL": 3600000,
+      "verifyHTTP": 429,
+      "sessions": 3,
+      "reason": "The sign-in server is at its request or account limit. Wait a minute and retry; if it continues, ask the world operator."
+    }
+  ],
+  "webkit": "Not run: browserType.launch: Executable doesn't exist at /tmp/stratoks-revision-browsers/webkit-2370/pw_run.sh ╔════════════════════════════════════════════════════════════╗ ║ Looks like Playwright was just installed or updated.       ║ ║ Please run the following command to download new browsers: ║ ║                                                            ║",
+  "passed": 0,
+  "failed": 2
+}

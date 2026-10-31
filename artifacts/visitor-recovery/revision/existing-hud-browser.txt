@@ -1,0 +1,19 @@
+PASS desktop HUD contains world, preserved inspector and accessible wallet selection
+PASS server-confirmed logout, rejected signature and repeated-click retry
+PASS chain changes clear verification immediately, revoke and explain disabled sign-in
+PASS offline logout is never reported as server success and can be retried
+PASS restart expires verified UI while anonymous world and private visits survive
+PASS account switch during signing discards a late signature and allows reconnection
+PASS provider disconnect clears existing verification and server session
+PASS late HTTP verification response after account switch is discarded and revoked
+PASS connection timeout and locked wallet return to an enabled retry
+PASS world switch while signing cannot authenticate the new browser world
+PASS 320px HUD and wallet dialog fit; absent/mobile injected and keyboard paths
+PASS 390px HUD and wallet dialog fit; absent/mobile injected and keyboard paths
+PASS 768px HUD and wallet dialog fit; absent/mobile injected and keyboard paths
+PASS 1440px HUD and wallet dialog fit; absent/mobile injected and keyboard paths
+PASS 320px connected, signing and verified header labels stay within their control zones
+PASS legacy browser provider fallback signs in through real server
+PASS static export defaults to a genuine browser demo without contacting a live backend
+PASS auth-disabled backend preserves anonymous viewing and never offers an enabled sign-in
+PASS offline capability check keeps browsing usable and availability retry reaches the real API

@@ -1,0 +1,151 @@
+{
+  "mode": "updated export",
+  "providers": "Simulated EIP-6963 and legacy EIP-1193; real randomly generated EOA signatures and real HTTP verification. No extensions/devices.",
+  "checks": [
+    {
+      "name": "reload disclosure distinguishes forgotten credentials from live server sessions",
+      "passed": true,
+      "ms": 2120
+    },
+    {
+      "name": "reload at the per-address session cap gives truthful recovery and expiry frees capacity",
+      "passed": true,
+      "ms": 4631
+    },
+    {
+      "name": "one auth live region in the open dialog, including errors",
+      "passed": true,
+      "ms": 1016
+    },
+    {
+      "name": "unavailable backend has one explanation and an actionable retry",
+      "passed": true,
+      "ms": 1359
+    },
+    {
+      "name": "429 refresh retains a real session without false verification and recovers",
+      "passed": true,
+      "ms": 3636
+    },
+    {
+      "name": "503 refresh retains a real session without false verification and recovers",
+      "passed": true,
+      "ms": 3574
+    },
+    {
+      "name": "offline refresh retains a real session without false verification and recovers",
+      "passed": true,
+      "ms": 1388
+    },
+    {
+      "name": "timeout refresh retains a real session without false verification and recovers",
+      "passed": true,
+      "ms": 12323
+    },
+    {
+      "name": "cancel after verification was minted rejects its late response and allows another sign-in",
+      "passed": true,
+      "ms": 1540
+    },
+    {
+      "name": "account and network switches during an unconfirmed refresh never resurrect the old credential",
+      "passed": true,
+      "ms": 2183
+    },
+    {
+      "name": "explicit logout remains available during Retry-After and ends server authentication",
+      "passed": true,
+      "ms": 1213
+    },
+    {
+      "name": "320px anonymous world, camera, inspector, wallet selection and keyboard layout",
+      "passed": true,
+      "ms": 1519
+    },
+    {
+      "name": "390px anonymous world, camera, inspector, wallet selection and keyboard layout",
+      "passed": true,
+      "ms": 1598
+    },
+    {
+      "name": "768px anonymous world, camera, inspector, wallet selection and keyboard layout",
+      "passed": true,
+      "ms": 1887
+    },
+    {
+      "name": "1440px anonymous world, camera, inspector, wallet selection and keyboard layout",
+      "passed": true,
+      "ms": 1991
+    },
+    {
+      "name": "static demo permits wallet connection but makes no authentication requests",
+      "passed": true,
+      "ms": 1335
+    }
+  ],
+  "errors": [],
+  "measurements": [
+    {
+      "scenario": "reload",
+      "survivingSessions": 1,
+      "oldCredentialHTTP": 200,
+      "reason": "Verified on chain 1. Reload forgets this tab’s credential. Sign out before reloading to end the server session; otherwise it lasts until expiry or server restart.",
+      "privacy": "Privacy and wallet support\n\nReload forgets this tab’s credential. Sign out before reloading to end the server session; otherwise it lasts until expiry or server restart. Private visit history stays on the world server, subject to the owner’s retention policy for inactive visitor records. Resident memory is separate. Login never pauses, resets or advances the simulation.\n\nOnly simulated MetaMask/Rabby-style providers were tested. Actual extensions and mobile devices are untested. Compatible injected EVM account wallets may work. Smart contract wallets, Coinbase Smart Wallet and WalletConnect are not supported by this signature verifier."
+    },
+    {
+      "scenario": "per-address cap after reload",
+      "limit": 3,
+      "sessionTTL": 3600000,
+      "verifyHTTP": 429,
+      "sessions": 3,
+      "reason": "This account or origin has reached its active-session limit. Sign out in another signed-in tab, or wait for existing sessions to expire."
+    },
+    {
+      "width": 320,
+      "scrollWidth": 320,
+      "mainAction": {
+        "top": 8,
+        "bottom": 52,
+        "right": 266
+      },
+      "title": "STRATOKS · A world taking root",
+      "fontLoaded": true
+    },
+    {
+      "width": 390,
+      "scrollWidth": 390,
+      "mainAction": {
+        "top": 8,
+        "bottom": 52,
+        "right": 334
+      },
+      "title": "STRATOKS · A world taking root",
+      "fontLoaded": true
+    },
+    {
+      "width": 768,
+      "scrollWidth": 768,
+      "mainAction": {
+        "top": 12,
+        "bottom": 56,
+        "right": 662
+      },
+      "title": "STRATOKS · A world taking root",
+      "fontLoaded": true
+    },
+    {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "mainAction": {
+        "top": 12,
+        "bottom": 56,
+        "right": 1320
+      },
+      "title": "STRATOKS · A world taking root",
+      "fontLoaded": true
+    }
+  ],
+  "webkit": "Not run: browserType.launch:  ╔══════════════════════════════════════════════════════╗ ║ Host system is missing dependencies to run browsers. ║ ║ Missing libraries:                                   ║ ║     libgtk-4.so.1                                    ║",
+  "passed": 16,
+  "failed": 0
+}

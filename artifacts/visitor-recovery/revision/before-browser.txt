@@ -1,0 +1,10 @@
+FAIL reload disclosure distinguishes forgotten credentials from live server sessions: The input did not match the regular expression /Reload forgets this tab’s credential/. Input:
+
+'Verified on chain 1. This session ends on expiry, reload or server restart.'
+
+FAIL reload at the per-address session cap gives truthful recovery and expiry frees capacity: Expected values to be strictly equal:
++ actual - expected
+
++ 'The sign-in server is at its request or account limit. Wait a minute and retry; if it continues, ask the world operator.'
+- 'This account or origin has reached its active-session limit. Sign out in another signed-in tab, or wait for existing sessions to expire.'
+

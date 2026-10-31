@@ -89,6 +89,75 @@ async function check(name, run, options) {
   finally { await f.close(); }
 }
 try {
+  // Reload is a real document navigation: it does not run React effect cleanup.
+  // Capture disposable credentials only inside this test; never write them to evidence.
+  await check('reload disclosure distinguishes forgotten credentials from live server sessions', async (f) => {
+    const { p } = f;
+    const verified = p.waitForResponse((r) => new URL(r.url()).pathname === '/api/auth/verify' && r.status() === 200);
+    await f.login();
+    const { token } = await (await verified).json();
+    const reason = await p.locator('#visitor-reason').innerText();
+    await p.getByText('Privacy and wallet support', { exact: true }).click();
+    const privacy = await p.locator('.exp-visitor-details').innerText();
+    await shot(p, 'reload-disclosure-390');
+    await p.reload();
+    await p.waitForFunction(() => document.querySelector('.exp-app')?.dataset.connection === 'connected');
+    await f.open();
+    assert.equal(service.backend.auth.sessions.size, 1);
+    const reply = await fetch(service.origin + '/api/auth/session', { headers: { origin: service.origin, authorization: 'Bearer ' + token } });
+    assert.equal(reply.status, 200, 'forgotten credential still authenticates on the server');
+    assert.equal(await p.getByRole('button', { name: 'Sign out', exact: true }).count(), 0);
+    assert.doesNotMatch(await status(p).innerText(), /Verified visitor/);
+    report.measurements.push({ scenario: 'reload', survivingSessions: service.backend.auth.sessions.size, oldCredentialHTTP: reply.status, reason, privacy });
+    for (const text of [reason, privacy]) {
+      assert.match(text, /Reload forgets this tab’s credential/);
+      assert.match(text, /Sign out before reloading/);
+      assert.match(text, /until expiry or server restart/);
+      assert.doesNotMatch(text, /end(?:s)? on expiry, reload/);
+    }
+  });
+
+  await check('reload at the per-address session cap gives truthful recovery and expiry frees capacity', async (f) => {
+    const { p } = f, tokens = [];
+    const limit = service.backend.auth.cfg.maxSessionsPerAddress;
+    assert.equal(limit, 3); assert.equal(service.backend.auth.cfg.sessionTtlMs, 3_600_000);
+    for (let i = 0; i < limit; i++) {
+      const verified = p.waitForResponse((r) => new URL(r.url()).pathname === '/api/auth/verify' && r.status() === 200);
+      await f.login(); tokens.push((await (await verified).json()).token);
+      await p.reload();
+      await p.waitForFunction(() => document.querySelector('.exp-app')?.dataset.connection === 'connected');
+      assert.equal(service.backend.auth.sessions.size, i + 1);
+    }
+    for (const token of tokens) assert.equal((await fetch(service.origin + '/api/auth/session', { headers: { origin: service.origin, authorization: 'Bearer ' + token } })).status, 200);
+    await f.open(); await p.locator('.exp-visitor-wallet').first().click();
+    const rejected = p.waitForResponse((r) => new URL(r.url()).pathname === '/api/auth/verify');
+    await signin(p).click();
+    const response = await rejected;
+    assert.equal(response.status(), 429); assert.equal((await response.json()).error, 'session_store_full');
+    await p.waitForFunction(() => !document.querySelector('.exp-visitor button.primary')?.disabled);
+    const reason = await p.locator('#visitor-reason').innerText();
+    await shot(p, 'session-cap-390');
+    assert.equal(service.backend.auth.sessions.size, limit);
+    assert.equal(await p.getByRole('button', { name: 'Sign out', exact: true }).count(), 0);
+    assert.doesNotMatch(await status(p).innerText(), /Verified visitor|Session expired/);
+    report.measurements.push({ scenario: 'per-address cap after reload', limit, sessionTTL: service.backend.auth.cfg.sessionTtlMs, verifyHTTP: response.status(), sessions: service.backend.auth.sessions.size, reason });
+    // Exercise expiry recovery without a real one-hour wait. Only the disposable
+    // service clock advances; the production TTL and admission policy stay intact.
+    const now = service.backend.auth.now;
+    try {
+      const afterExpiry = Math.max(...[...service.backend.auth.sessions.values()].map((s) => s.expiresAt)) + 1;
+      service.backend.auth.now = () => afterExpiry;
+      service.backend.auth.gc(); assert.equal(service.backend.auth.sessions.size, 0);
+      // Return issuance to browser time so future-dated challenges are not rejected.
+      service.backend.auth.now = now;
+      await signin(p).click(); await isVerified(p); assert.equal(service.backend.auth.sessions.size, 1);
+      await p.getByRole('button', { name: 'Sign out', exact: true }).click();
+      await p.getByText('Signed out on the server.', { exact: true }).waitFor();
+      assert.equal(service.backend.auth.sessions.size, 0);
+    } finally { service.backend.auth.now = now; }
+    assert.equal(reason, 'This account or origin has reached its active-session limit. Sign out in another signed-in tab, or wait for existing sessions to expire.');
+  });
+
   await check('one auth live region in the open dialog, including errors', async ({ p, open }) => {
     await open(); await status(p).filter({ hasText: 'Sign-in unavailable' }).waitFor();
     assert.equal(await p.locator('.exp-visitor [role="status"], .exp-wallet-control + [role="status"]').count(), 1);

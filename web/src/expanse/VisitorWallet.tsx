@@ -12,6 +12,7 @@ const short = (s: string) => `${s.slice(0, 6)}…${s.slice(-4)}`;
 function readable(error: string) {
   if (/Failed to fetch|NetworkError|Load failed/i.test(error)) return "The sign-in server cannot be reached. Keep browsing or check availability to retry.";
   if (/does not offer compatible visitor sign-in/.test(error)) return "This world has not enabled compatible visitor sign-in. Keep browsing or check availability to retry.";
+  if (/session_store_full/.test(error)) return "This account or origin has reached its active-session limit. Sign out in another signed-in tab, or wait for existing sessions to expire.";
   if (/rate_limited|store_full/.test(error)) return "The sign-in server is at its request or account limit. Wait a minute and retry; if it continues, ask the world operator.";
   if (/unsupported_chain/.test(error)) return "Choose a supported network in your wallet, then retry.";
   if (/nonce_expired|unknown_or_used_nonce/.test(error)) return "The sign-in message expired or was already used. Retry for a fresh message.";
@@ -112,7 +113,7 @@ export function VisitorWallet({ backendUrl, worldId, open, onOpen, onClose }: {
   const reason = snapshot.busy ? "Waiting for the wallet or server. This action will time out; you can also cancel below."
     : snapshot.session && state === "checking" ? "Confirming this session with the server. You can keep browsing or sign out."
     : snapshot.session && state !== "verified" ? "Sign-in is temporarily unconfirmed. Your credential stays in this tab; the session check will retry automatically. You can keep browsing or sign out."
-    : snapshot.session ? `Verified on chain ${snapshot.session.chainId}. This session ends on expiry, reload or server restart.`
+    : snapshot.session ? `Verified on chain ${snapshot.session.chainId}. Reload forgets this tab’s credential. Sign out before reloading to end the server session; otherwise it lasts until expiry or server restart.`
     : !backendUrl
     ? snapshot.error ? readable(snapshot.error) : "This is an isolated preview. Connect a world server in Choose world to use a visitor account."
     : checking ? "Checking whether this world offers visitor sign-in…"
@@ -175,7 +176,7 @@ export function VisitorWallet({ backendUrl, worldId, open, onOpen, onClose }: {
         {!available && backendUrl && <button className="exp-button" disabled={checking || snapshot.busy} onClick={() => void checkAvailability()}>Check sign-in availability</button>}
         {pendingRevocation && <p className="exp-small exp-visitor-error">Server revocation is pending. Retry while this tab is open. Otherwise the old session lasts until expiry or server restart.</p>}
         <details className="exp-visitor-details"><summary>Privacy and wallet support</summary>
-          <p>Sessions stay only in this tab’s memory and end on expiry, reload or server restart. Private visit history stays on the world server, subject to the owner’s retention policy for inactive visitor records. Resident memory is separate. Login never pauses, resets or advances the simulation.</p>
+          <p>Reload forgets this tab’s credential. Sign out before reloading to end the server session; otherwise it lasts until expiry or server restart. Private visit history stays on the world server, subject to the owner’s retention policy for inactive visitor records. Resident memory is separate. Login never pauses, resets or advances the simulation.</p>
           <p>Only simulated MetaMask/Rabby-style providers were tested. Actual extensions and mobile devices are untested. Compatible injected EVM account wallets may work. Smart contract wallets, Coinbase Smart Wallet and WalletConnect are not supported by this signature verifier.</p>
         </details>
       </div>

@@ -1,0 +1,131 @@
+{
+  "status": "passed",
+  "inheritedCommit": "5a187d95046a4b1f974c1123e8a989ce5197c9d4",
+  "submissionCommit": "Assigned after handoff; no Git metadata written.",
+  "scope": "Truthful reload and active-session-cap HUD/docs; admission/revocation policies preserved.",
+  "responses": {
+    "path": ".imd-responses.json",
+    "bytes": 2430,
+    "sha256": "71b0f5c77cb77a96f4797ca3f2a5d0488fadc507b41790b02a6bd55168bba373"
+  },
+  "budgets": {
+    "submissionLimitBytes": 8388608,
+    "addedOrModifiedFileBytesExcludingThisManifest": 1005221,
+    "manifestReserveBytes": 32768,
+    "evidencePath": "artifacts/visitor-recovery/**",
+    "evidenceLimitBytes": 2097152,
+    "evidenceBytesExcludingThisManifest": 1978031
+  },
+  "integrity": {
+    "forbiddenPathsUnchanged": true,
+    "buildConfigAndDependencyFilesUnchanged": true,
+    "serverAndSharedControllerUnchanged": true,
+    "allPublicAssetsCopiedExactly": true,
+    "generatedDependencyOrCacheAdditions": [],
+    "submoduleAdditions": [],
+    "diffWhitespaceCheck": "git diff --check passed"
+  },
+  "export": {
+    "files": 27,
+    "bytes": 5923258,
+    "relativeIndexAssets": [
+      "./favicon.png",
+      "./assets/index-CJb5861Y.js",
+      "./assets/index-5NoqZk_g.css",
+      "./share-world.jpg"
+    ],
+    "filesAndSha256": {
+      "dist/art/agency-activities.webp": "ef09855239cd13a2bdee92209141c52e39a696ee9b886cf68c3657a91c6cb448",
+      "dist/art/agency-terrain.webp": "a1a9912662e08f06421e860349e31c7a44662bd50c02e3125bdae9b4742ee3db",
+      "dist/art/living-characters.webp": "80d4d8b0473961438a5c0fa00685eeed516345ddf629401861eb0ed4c1389841",
+      "dist/art/living-world.webp": "a9e13c3b2ce551d569a9ab757151c037ae62b40c6435c85725941219953c4caa",
+      "dist/art/manifest.json": "89bbc0cb86000d88a43b9367bfa8856a4795f7eb25542e635e2ee7140d23946a",
+      "dist/art/model.webp": "c2a5c2e698a919f7741c576c243586d0657f984c1eaf7b30c91be23456171835",
+      "dist/assets/demo.worker-nBCLUSwi.js": "3641dee8e4d77e1c0147b9e42e4e55e1ce7e903a5e11ba6a5a5b526e7bcd04c5",
+      "dist/assets/index-5NoqZk_g.css": "bc5cba44215fe96c61f9b43cf01265eaaecd1c42a21cef78d0afd90ff39d848d",
+      "dist/assets/index-CJb5861Y.js": "6e27621021106e1558fcec47a3f0e4abe28cc3fd5c835a6bf8b488251e1954b4",
+      "dist/assets/manrope-latin-wght-normal-DHIcAJRg.woff2": "a30ddcd349703aff7464c34bef3fffdff405ee50c113440d7c8693c02d210972",
+      "dist/demo/agency-checkpoint.json.gz": "dfd1876c94afe40505583ed4f6094891bd8f5195439238e039bc44892ef907ab",
+      "dist/demo/agency-manifest.json": "eff1b2a76b6488669b5d41e3581d11f19128c790db22fc5dc1517036238ffbe6",
+      "dist/demo/checkpoint.json.gz": "cf2dcd95a83ffa1cc50975b40f9c6cb5829637ae0b3b9ff3f07846be12a5d716",
+      "dist/demo/manifest.json": "930126f9057c4bb93b4c924c43a2c56b6206e0b4a2d126170131aeb87baafd23",
+      "dist/expanse-config.json": "6418482c775f61811d44fc8d339c102beb065ecddea041ff7cfa5202791b161f",
+      "dist/favicon.png": "3d66a08dd48c25ad9b8931464178e435425a5fd35793c620b610f56e4f8d5b09",
+      "dist/favicon.svg": "3521e47e2025301dd21d3601ec30a18bd4c51162d3a5c131ff16b694b897227b",
+      "dist/index.html": "b186f658faa82e8bd25028d57ac5e5a3642ed95c8e128b819e2cd36cf9964bb9",
+      "dist/licenses/THIRD_PARTY_NOTICES.txt": "904d738f6688f759b70de248bcd2967bf52313104637c22bcb3a40586cf550fe",
+      "dist/licenses/client-and-art.txt": "6e74079f1931f630567f388f6ce9c6eb6899db08f2fbfc89330941608e3a8906",
+      "dist/licenses/dependencies.json": "834e4f123324136c2504888466da6abfb55e55c3f7e3fdcdd780820e6c36f6e1",
+      "dist/licenses/living-art.txt": "a829887ff0bb04bc3e1765ea574bb405efe35663720445720c699ae6d5857136",
+      "dist/licenses/manrope.txt": "d826ab6583b12c26807d8716a545bdbbb672df04f48608a364ba9efdbe501c30",
+      "dist/licenses/rainbowkit.txt": "5095037afa1ba03be36e04305c01ec9ee600e14377738a026482b1a888c4e365",
+      "dist/logo.svg": "68235a6d15d23a027ba8b34db9752808b1604f88f596cc655178073fb1b76aa8",
+      "dist/share-world.jpg": "06a39a201ed6896cf8262706c3d37ac9be7498d67286b1a6a8d5c5ea8964e2f4",
+      "dist/world-config.json": "6c04b749606afa71d027cc3c65895a2241948dade26cc8b6f0337f5416d50d83"
+    }
+  },
+  "changedFilesAndSha256": {
+    ".imd-responses.json": "71b0f5c77cb77a96f4797ca3f2a5d0488fadc507b41790b02a6bd55168bba373",
+    "DESIGN.md": "f24da39a1bff2e1fba0296e3808bd4286673f0770425fbc05b1676d6d1de96cc",
+    "README.md": "3017f7295d5ae5a22e1f51ff5914582a031339b07e4643bc7a3c16f1efa7b02c",
+    "artifacts/visitor-recovery/revision/VALIDATION.md": "a6e4a357c04cedc21c2ea13a4563d11dadca6a4fe9a6e48a7e5958141373f3b6",
+    "artifacts/visitor-recovery/revision/backend.tap": "c1f476a626bcceaed89bf878bb8cf6d6426c32d9d8bf5ea6d222125e3a14abbc",
+    "artifacts/visitor-recovery/revision/before-browser/reload-disclosure-390.jpg": "bf61377c983f6ca80a16b2af2279e0b3e33be42c935c59d6d1c6795f6601d1a6",
+    "artifacts/visitor-recovery/revision/before-browser/results.json": "1707d9210e3fbc10738a154070ff7a45aa72f0a15c76473909f7e174d10d590f",
+    "artifacts/visitor-recovery/revision/before-browser/session-cap-390.jpg": "d915bb948dd2fb1cca4894cb8ef8fd5005775e54d0ca1ec1f5933c0b954e5794",
+    "artifacts/visitor-recovery/revision/before-browser.txt": "6f7dbb8e7a26cdc2c11bd09eb625e0803dc85d7221458c375aec919f9016251c",
+    "artifacts/visitor-recovery/revision/browser/hud-1440.jpg": "7bb7c691a69cf0a812386507e5bffd5ac2abd5274ea01653fd681e8afec461c5",
+    "artifacts/visitor-recovery/revision/browser/hud-320.jpg": "70b5cc204ed184eaafadc544cf29f81db44c84d87c92ac9edf887ba639938236",
+    "artifacts/visitor-recovery/revision/browser/hud-390.jpg": "a41f98f769ab4ac30056d881e99a95647ab7dcb38fb4c58f64322f168f3bfd62",
+    "artifacts/visitor-recovery/revision/browser/hud-768.jpg": "3b39c22429591e23c74d9ed881c726befaa5fdca6713d0030dbd3901440f0ace",
+    "artifacts/visitor-recovery/revision/browser/mobile-unconfirmed.jpg": "8b07339f1c4c4a7773de204dc46ac4b83b3b06e42d3c36077b236af4683b686d",
+    "artifacts/visitor-recovery/revision/browser/reload-disclosure-390.jpg": "7232ddab69e864c97ac662daae8eb91d835da7bd8b4d8725d91497022da22eab",
+    "artifacts/visitor-recovery/revision/browser/results.json": "c1a7db6eb12a25bf2bcd974293bb1a9e8ec8d2dacdc0ef3686e838eb20286263",
+    "artifacts/visitor-recovery/revision/browser/session-cap-390.jpg": "654fbdb307ae2b24aecb0db1a9a5bde163396375b783ed8b3c4c1cb38e9685b7",
+    "artifacts/visitor-recovery/revision/browser/static-connected.jpg": "c6869460a38b988564437a5bb6b50f1be55f1021ab308c7022284fbb28c32422",
+    "artifacts/visitor-recovery/revision/browser/verified-320.jpg": "aeaaa7fe8bf8b525e9677ca56c7394ab6e4d1f527a89cc67680ef618627c6b1b",
+    "artifacts/visitor-recovery/revision/browser/verified-390.jpg": "5903e0944f839809d400225569f0c73b4f034b5dd7446a09ea5d68d351313f4f",
+    "artifacts/visitor-recovery/revision/browser.txt": "c88da6304709ebf281b25d9e4b499d3b6d56217637dd4c6538caac98c5fba140",
+    "artifacts/visitor-recovery/revision/build.txt": "c2d2279928f29064acf48a6b439ae45343969451401f16ebc071d9db96a7fd5e",
+    "artifacts/visitor-recovery/revision/existing-browser.json": "d25b852eddfa2c7872bb6e4fde00b3b27a9114e704eaf08cbeb20bafc52cc396",
+    "artifacts/visitor-recovery/revision/existing-hud-browser.txt": "d67b1ce3ae37294325c99b6ef6aed05a72f8d678951f164f91abbd5e5ab2e8f5",
+    "artifacts/visitor-recovery/revision/expanse-frontend.tap": "bb7011a98e0d0e458464860acfc5be471c10048a45b3a7dfda00f9a516f5c15d",
+    "artifacts/visitor-recovery/revision/frontend.tap": "2debcc0af0de90752c6e88951836ec2f1cec83db9965cc00fe8b2f76db8248d7",
+    "artifacts/visitor-recovery/revision/manual-browser.json": "2916d2163b7af7efe462f9e0a121b88fb5640083083f99e4366b077b8c23752d",
+    "artifacts/visitor-recovery/revision/taste-stdout.json": "942647b1a86cdf097c54a83922bd95b1d333adbd2e69e0cedef46d60cc94f20a",
+    "artifacts/visitor-recovery/revision/taste.json": "e7bd162741223f9467cd830ec6cb89d343c6304c82e8ced6434ba8bbc87821cb",
+    "artifacts/visitor-recovery/revision/typecheck.txt": "ec16ef624299ddce331cd097e1f2d009a93a7e9a5aaae581659139f368fac248",
+    "dist/assets/index-CJb5861Y.js": "6e27621021106e1558fcec47a3f0e4abe28cc3fd5c835a6bf8b488251e1954b4",
+    "dist/index.html": "b186f658faa82e8bd25028d57ac5e5a3642ed95c8e128b819e2cd36cf9964bb9",
+    "docs/auth/API-v1.md": "b2f788b26d859a953ab5ebd4e27850ef71ce6bc87684b4caec2c66754120b437",
+    "docs/auth/SETUP.md": "8db34b371f21242662ba842d041d3d90b9bdaf7b315a7b9cfa3a8f7aa1be8289",
+    "tests/browser/visitor-recovery.mjs": "150b5a4301e4be93cf9509486dfa4cfe95c32eb931f1ec457db7c6a605615922",
+    "web/src/expanse/VisitorWallet.tsx": "d182778d5ef1976f4f39a9e67b2a967ffb11acace0bf3dc192d6ad4fc09651ea"
+  },
+  "checks": {
+    "backend": {
+      "pass": 248,
+      "fail": 0
+    },
+    "frontend": {
+      "pass": 51,
+      "fail": 0
+    },
+    "recoveryBrowser": {
+      "pass": 16,
+      "fail": 0
+    },
+    "existingHudBrowser": {
+      "pass": 19,
+      "fail": 0
+    },
+    "typecheckExit": 0,
+    "buildExit": 0,
+    "designProbe": {
+      "pass": 16,
+      "fail": 0
+    },
+    "webkit": "not run: missing host shared libraries",
+    "automaticReloadRevocation": "not implemented; explicitly disclosed"
+  }
+}

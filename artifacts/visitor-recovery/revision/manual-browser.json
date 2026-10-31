@@ -1,0 +1,25 @@
+{
+  "export": "dist/index.html served at loopback /preview/?demo=1",
+  "browser": "Tool-provided Chromium; anonymous static demo; no wallet provider installed",
+  "viewport": { "width": 390, "height": 844 },
+  "observed": {
+    "productAndConnectOnFirstScreen": true,
+    "demoClearlyLabelled": true,
+    "connectOpensVisitorDialog": true,
+    "escapeClosesDialog": true,
+    "focusReturnsTo": "Connect wallet",
+    "documentScrollWidth": 390,
+    "manropeLoaded": true,
+    "consoleMessages": 0,
+    "successfulLocalRequests": 13,
+    "nonLocalRequests": 0,
+    "authRequests": 0
+  },
+  "screenshotInspection": [
+    "390px static first screen in browser tool",
+    "before-browser/session-cap-390.jpg",
+    "browser/reload-disclosure-390.jpg",
+    "browser/session-cap-390.jpg"
+  ],
+  "limitations": ["No actual wallet extension or device", "No screen-reader speech test", "No native zoom test"]
+}
