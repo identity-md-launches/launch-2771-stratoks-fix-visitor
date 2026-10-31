@@ -1,0 +1,194 @@
+✖ recovery: transient config checks retain an existing credential without claiming verification (120.815172ms)
+✖ recovery: only explicit invalid-session replies expire a session; generic proxy errors do not (81.63666ms)
+✖ recovery: manual success cancels old backoff and refreshes are deduplicated (111.639296ms)
+✖ recovery: Retry-After is a lower bound, including dates and delays longer than a minute (77.510471ms)
+✖ recovery: a stale refresh cannot block or reset a newer session refresh (627.34186ms)
+✖ recovery: late nonce cannot overwrite the cancellation secret of a newer signing attempt (75.868618ms)
+✖ recovery: cancelling a delayed verify queues no malformed nonce-only revocations (76.76069ms)
+✖ recovery: logout requests share one in-flight revocation and require acknowledgement (85.730498ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 0
+ℹ fail 8
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2680.058242
+
+✖ failing tests:
+
+test at tests/expanse-auth-client.test.js:267:1
+✖ recovery: transient config checks retain an existing credential without claiming verification (120.815172ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - '2242837039a852ba295a612efad71b81077c475e86620c198d4e310fdfeb6836'
+  
+      at TestContext.<anonymous> (file://<repo>/tests/expanse-auth-client.test.js:272:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: '2242837039a852ba295a612efad71b81077c475e86620c198d4e310fdfeb6836',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/expanse-auth-client.test.js:279:1
+✖ recovery: only explicit invalid-session replies expire a session; generic proxy errors do not (81.63666ms)
+  AssertionError [ERR_ASSERTION]: 401 proxy_login
+  + actual - expected
+  
+  + undefined
+  - '19e402ca5657f1ee44ae0d868f86ce8044cf8937b38d0bdbf4e8224b6416d38f'
+  
+      at TestContext.<anonymous> (file://<repo>/tests/expanse-auth-client.test.js:285:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: '19e402ca5657f1ee44ae0d868f86ce8044cf8937b38d0bdbf4e8224b6416d38f',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/expanse-auth-client.test.js:296:1
+✖ recovery: manual success cancels old backoff and refreshes are deduplicated (111.639296ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + <ref *1> Timeout {
+  +   Symbol(asyncId): 2581,
+  +   Symbol(kAsyncContextFrame): undefined,
+  +   Symbol(kHasPrimitive): false,
+  +   Symbol(refed): true,
+  +   Symbol(triggerId): 2570,
+  +   _destroyed: false,
+  +   _idleNext: TimersList {
+  +     _idleNext: [Circular *1],
+  +     _idlePrev: [Circular *1],
+  +     expiry: 1551,
+  +     id: -9007199254740928,
+  +     msecs: 1180,
+  +     priorityQueuePosition: 5
+  +   },
+  +   _idlePrev: TimersList {
+  +     _idleNext: [Circular *1],
+  +     _idlePrev: [Circular *1],
+  +     expiry: 1551,
+  +     id: -9007199254740928,
+  +     msecs: 1180,
+  +     priorityQueuePosition: 5
+  +   },
+  +   _idleStart: 371,
+  +   _idleTimeout: 1180.818562171812,
+  +   _onTimeout: [Function (anonymous)],
+  +   _repeat: null,
+  +   _timerArgs: undefined
+  + }
+  - null
+  
+      at TestContext.<anonymous> (file://<repo>/tests/expanse-auth-client.test.js:302:50)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { _idleTimeout: -1, _idlePrev: null, _idleNext: null, _idleStart: 371, _onTimeout: undefined, _timerArgs: undefined, _repeat: null, _destroyed: true },
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/expanse-auth-client.test.js:311:1
+✖ recovery: Retry-After is a lower bound, including dates and delays longer than a minute (77.510471ms)
+  AssertionError [ERR_ASSERTION]: 120: -1793436802138ms
+      at TestContext.<anonymous> (file://<repo>/tests/expanse-auth-client.test.js:319:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/expanse-auth-client.test.js:326:1
+✖ recovery: a stale refresh cannot block or reset a newer session refresh (627.34186ms)
+  AssertionError [ERR_ASSERTION]: new generation must have its own refresh
+  
+  1 !== 2
+  
+      at TestContext.<anonymous> (file://<repo>/tests/expanse-auth-client.test.js:340:12)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/expanse-auth-client.test.js:348:1
+✖ recovery: late nonce cannot overwrite the cancellation secret of a newer signing attempt (75.868618ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + '8db30928c33baa5ba6ac367b36306c70a65b42db1b4acb2c8d0b56d51899a876'
+  - 'f6ae49d42fd4a1113a44a0b572f8f06ef6a3fd65c9bbe3e8caa7425b43ccce87'
+  
+      at TestContext.<anonymous> (file://<repo>/tests/expanse-auth-client.test.js:361:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '8db30928c33baa5ba6ac367b36306c70a65b42db1b4acb2c8d0b56d51899a876',
+    expected: 'f6ae49d42fd4a1113a44a0b572f8f06ef6a3fd65c9bbe3e8caa7425b43ccce87',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/expanse-auth-client.test.js:369:1
+✖ recovery: cancelling a delayed verify queues no malformed nonce-only revocations (76.76069ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file://<repo>/tests/expanse-auth-client.test.js:374:51)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/expanse-auth-client.test.js:378:1
+✖ recovery: logout requests share one in-flight revocation and require acknowledgement (85.730498ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 1
+  
+      at TestContext.<anonymous> (file://<repo>/tests/expanse-auth-client.test.js:383:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

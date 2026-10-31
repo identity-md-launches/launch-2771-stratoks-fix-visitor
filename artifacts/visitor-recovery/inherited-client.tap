@@ -1,0 +1,27 @@
+✔ client uses actual HTTP crypto verification and server logout; connecting alone never authenticates (258.045258ms)
+✔ transient session-check errors retain credentials, deduplicate checks and recover without false verification (130.618954ms)
+✔ account switch mid-signature cannot authenticate old or new account; retry recovers (119.911751ms)
+✔ network changes and provider disconnect immediately clear/revoke an existing session (132.543191ms)
+✔ chain switch mid-signature and silent account changes both reject; no transaction RPC (66.935598ms)
+✔ late verification response after account switch is cancelled on server (84.632148ms)
+✔ declined signature, locked wallet and provider timeout leave buttons recoverable (165.316588ms)
+✔ signature reading timeout is independently bounded and cancelled without shortening backend requests (142.980271ms)
+✔ backend timeout/offline logout, unavailable capability and retry (169.859758ms)
+✔ exact challenge validation rejects altered server fields before prompting wallet (26.741911ms)
+✔ missing wallets, EIP-6963 discovery, multiple provider choice, fallback and cleanup (22.644617ms)
+✔ late nonce after disconnect is cancelled; connection timeout/rejection can be retried (130.429492ms)
+✔ initial wallet announcements during connect are accepted without creating authentication (119.833295ms)
+✔ isolated preview can connect a wallet but cannot request a challenge or fake authentication (11.939576ms)
+✔ silent account switch while verify is in flight rejects and revokes its returned session (85.996939ms)
+✔ capability world changes invalidate and malformed current-session replies become unverified (133.662495ms)
+✔ late logout acknowledgement cannot overwrite a newer verified account state (129.962905ms)
+✔ expiry timer clears verification and revokes server credential without changing the world (173.161643ms)
+✔ delivered static preview modules match the authoritative shared client bytes (0.360018ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2214.492315

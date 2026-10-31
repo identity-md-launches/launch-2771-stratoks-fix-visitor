@@ -1,0 +1,37 @@
+✔ client uses actual HTTP crypto verification and server logout; connecting alone never authenticates (318.889756ms)
+✔ transient session-check errors retain credentials, deduplicate checks and recover without false verification (2550.028788ms)
+✔ account switch mid-signature cannot authenticate old or new account; retry recovers (124.578138ms)
+✔ network changes and provider disconnect immediately clear/revoke an existing session (132.988313ms)
+✔ chain switch mid-signature and silent account changes both reject; no transaction RPC (70.239838ms)
+✔ late verification response after account switch is cancelled on server (80.640402ms)
+✔ declined signature, locked wallet and provider timeout leave buttons recoverable (188.035022ms)
+✔ signature reading timeout is independently bounded and cancelled without shortening backend requests (147.761025ms)
+✔ backend timeout/offline logout, unavailable capability and retry (182.34894ms)
+✔ exact challenge validation rejects altered server fields before prompting wallet (31.415009ms)
+✔ missing wallets, EIP-6963 discovery, multiple provider choice, fallback and cleanup (26.896321ms)
+✔ late nonce after disconnect is cancelled; connection timeout/rejection can be retried (181.374452ms)
+✔ initial wallet announcements during connect are accepted without creating authentication (110.432493ms)
+✔ isolated preview can connect a wallet but cannot request a challenge or fake authentication (13.88998ms)
+✔ silent account switch while verify is in flight rejects and revokes its returned session (127.771803ms)
+✔ capability world changes invalidate and malformed current-session replies become unverified (137.460111ms)
+✔ late logout acknowledgement cannot overwrite a newer verified account state (130.830438ms)
+✔ expiry timer clears verification and revokes server credential without changing the world (179.900899ms)
+✔ delivered static preview modules match the authoritative shared client bytes (0.538597ms)
+✔ recovery: transient config checks retain an existing credential without claiming verification (80.546921ms)
+✔ recovery: only explicit invalid-session replies expire a session; generic proxy errors do not (76.334321ms)
+✔ recovery: manual success cancels old backoff and refreshes are deduplicated (76.349675ms)
+✔ recovery: Retry-After is a lower bound, including dates and delays longer than a minute (76.937736ms)
+✔ recovery: a stale refresh cannot block or reset a newer session refresh (130.940242ms)
+✔ recovery: late nonce cannot overwrite the cancellation secret of a newer signing attempt (41.974712ms)
+✔ recovery: cancelling a delayed verify queues no malformed nonce-only revocations (129.846927ms)
+✔ recovery: logout requests share one in-flight revocation and require acknowledgement (77.207949ms)
+✔ recovery: automatic retries grow with bounded jitter, recover, and stop on logout (virtual clock) (15.445316ms)
+✔ recovery: structured scope and control characters are checked before any wallet signature (147.872362ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5787.364377

@@ -1,5 +1,7 @@
 # Validation and remaining integration work
 
+This file records the earlier backend delivery. **Current HUD recovery results are in [visitor-recovery/VALIDATION.md](../../artifacts/visitor-recovery/VALIDATION.md)**, including before/after regressions, the rebuilt export and remaining ARM/browser limits. Counts below are historical, not the current release totals.
+
 No production connection/deployment, RPC call, owner wallet, asset operation, chain transaction or contract deployment was performed. All verification tests use disposable test signers. No runtime dependency was installed; the backend and delivered preview/client modules run on built-in Node/browser APIs. Tests need no network.
 
 | Check | Result | Evidence |

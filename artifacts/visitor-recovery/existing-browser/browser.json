@@ -1,0 +1,135 @@
+{
+  "wallets": "Simulated EIP-6963/EIP-1193 providers; real disposable EIP-191 signer and real HTTP backend. No actual extensions/devices.",
+  "checks": [
+    {
+      "name": "desktop HUD contains world, preserved inspector and accessible wallet selection",
+      "passed": true,
+      "ms": 1166
+    },
+    {
+      "name": "server-confirmed logout, rejected signature and repeated-click retry",
+      "passed": true,
+      "ms": 660
+    },
+    {
+      "name": "chain changes clear verification immediately, revoke and explain disabled sign-in",
+      "passed": true,
+      "ms": 410
+    },
+    {
+      "name": "offline logout is never reported as server success and can be retried",
+      "passed": true,
+      "ms": 426
+    },
+    {
+      "name": "restart expires verified UI while anonymous world and private visits survive",
+      "passed": true,
+      "ms": 786
+    },
+    {
+      "name": "account switch during signing discards a late signature and allows reconnection",
+      "passed": true,
+      "ms": 866
+    },
+    {
+      "name": "provider disconnect clears existing verification and server session",
+      "passed": true,
+      "ms": 21
+    },
+    {
+      "name": "late HTTP verification response after account switch is discarded and revoked",
+      "passed": true,
+      "ms": 1155
+    },
+    {
+      "name": "connection timeout and locked wallet return to an enabled retry",
+      "passed": true,
+      "ms": 11048
+    },
+    {
+      "name": "world switch while signing cannot authenticate the new browser world",
+      "passed": true,
+      "ms": 1280
+    },
+    {
+      "name": "320px HUD and wallet dialog fit; absent/mobile injected and keyboard paths",
+      "passed": true,
+      "ms": 108
+    },
+    {
+      "name": "390px HUD and wallet dialog fit; absent/mobile injected and keyboard paths",
+      "passed": true,
+      "ms": 434
+    },
+    {
+      "name": "768px HUD and wallet dialog fit; absent/mobile injected and keyboard paths",
+      "passed": true,
+      "ms": 431
+    },
+    {
+      "name": "1440px HUD and wallet dialog fit; absent/mobile injected and keyboard paths",
+      "passed": true,
+      "ms": 629
+    },
+    {
+      "name": "320px connected, signing and verified header labels stay within their control zones",
+      "passed": true,
+      "ms": 338
+    },
+    {
+      "name": "legacy browser provider fallback signs in through real server",
+      "passed": true,
+      "ms": 621
+    },
+    {
+      "name": "static export defaults to a genuine browser demo without contacting a live backend",
+      "passed": true,
+      "ms": 210
+    },
+    {
+      "name": "auth-disabled backend preserves anonymous viewing and never offers an enabled sign-in",
+      "passed": true,
+      "ms": 82
+    },
+    {
+      "name": "offline capability check keeps browsing usable and availability retry reaches the real API",
+      "passed": true,
+      "ms": 732
+    }
+  ],
+  "errors": [],
+  "widths": [
+    320,
+    390,
+    768,
+    1440
+  ],
+  "contrast": [
+    {
+      "selector": ".exp-visitor-status",
+      "color": "rgb(232, 195, 110)",
+      "background": "rgb(40, 54, 45)",
+      "ratio": 7.526570278468771
+    },
+    {
+      "selector": ".exp-muted",
+      "color": "rgb(189, 200, 182)",
+      "background": "rgb(40, 54, 45)",
+      "ratio": 7.308300207166264
+    },
+    {
+      "selector": ".exp-visitor-reason",
+      "color": "rgb(245, 239, 217)",
+      "background": "rgb(40, 54, 45)",
+      "ratio": 11.010534154554671
+    },
+    {
+      "selector": ".exp-visitor-details summary",
+      "color": "rgb(245, 239, 217)",
+      "background": "rgb(40, 54, 45)",
+      "ratio": 11.010534154554671
+    }
+  ],
+  "webkit": "Unavailable: WebKit could not be launched; Safari/device behavior unverified.",
+  "completed": true
+}

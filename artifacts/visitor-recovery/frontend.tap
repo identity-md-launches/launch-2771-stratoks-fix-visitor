@@ -1,0 +1,46 @@
+
+> stratoks-client@0.1.0 test
+> tsx --test src/*.test.ts
+
+✔ isometric basis points preserve existing coordinates, including negative chunk boundaries (8.409406ms)
+✔ all visible in-world screen samples are covered by the bounded API query at every zoom and aspect (3.516168ms)
+✔ zoom keeps the pointer world coordinate stable, while minimap uses the same world bounds (0.377565ms)
+✔ defect 2: every corner tile can be centred at all supported zooms and aspects (0.630654ms)
+✔ primitive intentions cannot make a false work/rest/fishing pose (0.302303ms)
+✔ fishing casts only with actual phase and obtainable line; no catch frame is invented (0.417384ms)
+✔ loads and construction follow confirmed inventory/materials instead of destination plans (0.324355ms)
+✔ defect 4: repair phase requires work tool and repair material, never food alone (0.220419ms)
+✔ new activity art needs actual work, local object, input and heat/water (0.420519ms)
+✔ configuration permits HTTPS subpaths and refuses credentials or mixed content (0.618655ms)
+✔ wire query preserves negative world coordinates and selected creature (0.225908ms)
+✔ incompatible and incoherent frames are not presented as shared state (0.259928ms)
+✔ bounded viewport cache reuses unchanged ticks and invalidates camera, terrain and world identity (10.701303ms)
+✔ worn paint uses reported shelters and adjacent travel without crossing blocked land or water (0.730883ms)
+✔ defect 3: connected cliffs expose only drops; water banks and snow use real terrain kinds (0.525817ms)
+✔ terrain picking and query cover all four corners, negative chunks, raised ground, zoom and aspect (31.640318ms)
+✔ off-world and unknown terrain cannot be picked or invented by relief (0.201652ms)
+✔ three real policies acquire, reverse and lose preference with output ablation across ten seeds (2688.163744ms)
+✔ lab reproducibility, validation and bounded retained evidence (326.901326ms)
+✔ uncertain interventions stay owned by the actor, world and service across reloads (1.502287ms)
+✔ legacy payloads remain readable but cannot be mistaken for actor-owned storage (0.255994ms)
+✔ invalid stored requests cannot be retried (0.22052ms)
+✔ 429 and durability/busy errors expose actionable honest server guidance (22.067421ms)
+✔ event cursor is bounded and pagination uses the server cursor unchanged (1.183461ms)
+✔ responses from a stopped connection cannot update a new world (2.814208ms)
+✔ actual simulation snapshot is rendered as an entity map with its real population (40.06826ms)
+✔ delta updates one creature, removes consumed resources, and deduplicates replayed events (12.578069ms)
+✔ a sequence gap freezes existing state and asks for a full snapshot (12.202278ms)
+✔ reconnect snapshot replaces entities without duplicating past events (9.058457ms)
+✔ developer reset replaces world, history, events and sequence rather than merging old identities (7.766665ms)
+✔ a snapshot from an earlier restored backup discards events from the abandoned timeline (7.506655ms)
+✔ malformed snapshot is refused without changing the current world (7.834937ms)
+✔ same-tick snapshot recovery discards uncommitted events as well as lower-tick recovery (6.213081ms)
+✔ restart epoch clears abandoned events even when the new sequence has already caught up (6.342214ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3182.4051

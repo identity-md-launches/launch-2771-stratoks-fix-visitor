@@ -1,0 +1,14 @@
+PASS one auth live region in the open dialog, including errors
+PASS unavailable backend has one explanation and an actionable retry
+PASS 429 refresh retains a real session without false verification and recovers
+PASS 503 refresh retains a real session without false verification and recovers
+PASS offline refresh retains a real session without false verification and recovers
+PASS timeout refresh retains a real session without false verification and recovers
+PASS cancel after verification was minted rejects its late response and allows another sign-in
+PASS account and network switches during an unconfirmed refresh never resurrect the old credential
+PASS explicit logout remains available during Retry-After and ends server authentication
+PASS 320px anonymous world, camera, inspector, wallet selection and keyboard layout
+PASS 390px anonymous world, camera, inspector, wallet selection and keyboard layout
+PASS 768px anonymous world, camera, inspector, wallet selection and keyboard layout
+PASS 1440px anonymous world, camera, inspector, wallet selection and keyboard layout
+PASS static demo permits wallet connection but makes no authentication requests

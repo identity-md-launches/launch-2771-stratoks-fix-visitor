@@ -5,12 +5,12 @@ const backendEnabled = document.querySelector('meta[name="stratoks-demo-backend"
 const loadConfig = () => backendEnabled ? controller.loadConfig().catch(() => {}) : Promise.resolve();
 const controller = new VisitorAuthClient({ baseUrl: location.origin, uri: location.origin + '/', origin: location.origin, onChange: render });
 function render({ state, error, address, chainId, session, busy }) {
-  el('status').textContent = { disconnected: 'Disconnected', connected: 'Connected · not authenticated', signing: 'Signing · waiting for wallet or backend', verified: 'Verified visitor', expired: 'Session expired', unavailable: 'Sign-in unavailable' }[state];
-  el('account').textContent = address ? `${address} · chain ${chainId ?? 'unknown'}${session ? ` · verified visits: ${session.profile.visitCount}` : ''}` : '';
+  el('status').textContent = session && state === 'unavailable' ? 'Session unconfirmed' : { disconnected: 'Disconnected', connected: 'Connected · not authenticated', signing: 'Signing · waiting for wallet or backend', checking: 'Checking session', verified: 'Verified visitor', expired: 'Session expired', unavailable: 'Sign-in unavailable' }[state];
+  el('account').textContent = address ? `${address} · chain ${chainId ?? 'unknown'}${session ? ` · ${state === 'verified' ? 'verified visits' : 'last confirmed visits'}: ${session.profile.visitCount}` : ''}` : '';
   el('error').textContent = error;
   el('connect').disabled = busy;
   el('sign').disabled = busy || !address || !!session || !controller.config;
-  el('reason').textContent = busy ? 'Wait for this attempt, or disconnect to cancel. Requests time out and can be retried.' : session ? 'Already verified. Sign out before signing in again.' : !address ? 'Connect a wallet to enable sign-in.' : !controller.config ? 'No compatible isolated backend is available. Static hosting does not install the backend; run the demo server, then reconnect.' : !controller.config.chains.includes(chainId) ? `Sign-in requires chain ${controller.config.chains.join(' or ')}. Select it in your wallet.` : 'Sign-in is optional. Read the exact message in your wallet before signing.';
+  el('reason').textContent = busy ? 'Wait for this attempt, or disconnect to cancel. Requests time out and can be retried.' : session ? state === 'verified' ? 'Already verified. Sign out before signing in again.' : 'Session confirmation is pending. Your credential is retained; checks retry automatically. You can sign out.' : !address ? 'Connect a wallet to enable sign-in.' : !controller.config ? 'No compatible isolated backend is available. Static hosting does not install the backend; run the demo server, then reconnect.' : !controller.config.chains.includes(chainId) ? `Sign-in requires chain ${controller.config.chains.join(' or ')}. Select it in your wallet.` : 'Sign-in is optional. Read the exact message in your wallet before signing.';
 }
 function listWallets(wallets) {
   el('wallets').replaceChildren();

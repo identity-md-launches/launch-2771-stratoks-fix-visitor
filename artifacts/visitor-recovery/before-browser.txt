@@ -1,0 +1,13 @@
+FAIL one auth live region in the open dialog, including errors: Expected values to be strictly equal:
+
+3 !== 1
+
+FAIL unavailable backend has one explanation and an actionable retry: Expected values to be strictly equal:
+
+2 !== 1
+
+FAIL 429 refresh retains a real session without false verification and recovers: locator.waitFor: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('.exp-visitor-status strong').filter({ hasText: 'Session unconfirmed' }) to be visible[22m
+
+FAIL cancel after verification was minted rejects its late response and allows another sign-in: Expected backend state did not arrive

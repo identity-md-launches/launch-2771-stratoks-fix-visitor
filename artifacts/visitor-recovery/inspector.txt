@@ -1,0 +1,5 @@
+PASS 844x390 scrollTop=0 name=Ziye visible=true refreshKept=120
+PASS 320x568 scrollTop=0 name=Ziye visible=true refreshKept=120
+PASS 667x375 scrollTop=0 name=Ziye visible=true refreshKept=120
+PASS 390x844 scrollTop=0 name=Ziye visible=true refreshKept=120
+PASS 1440x900 scrollTop=0 name=Ziye visible=true refreshKept=120

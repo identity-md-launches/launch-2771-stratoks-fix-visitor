@@ -3,6 +3,7 @@
 .exp-wallet-control:hover { background:var(--hud-hover); }
 .exp-wallet-compact { display:none; }
 .exp-visitor { display:grid;gap:16px;line-height:1.6; }
+.exp-visitor-feedback {display:grid;gap:12px;}
 .exp-visitor-status {display:flex;align-items:center;gap:8px;color:var(--gold);}
 .exp-visitor-address {overflow-wrap:anywhere;font-variant-numeric:tabular-nums;}
 .exp-visitor-reason {padding-block:12px;border-block:1px solid var(--hud-line);}

@@ -1,0 +1,35 @@
+{
+  "mode": "inherited export",
+  "providers": "Simulated EIP-6963 and legacy EIP-1193; real randomly generated EOA signatures and real HTTP verification. No extensions/devices.",
+  "checks": [
+    {
+      "name": "one auth live region in the open dialog, including errors",
+      "passed": false,
+      "error": "Expected values to be strictly equal:\n\n3 !== 1\n",
+      "ms": 505
+    },
+    {
+      "name": "unavailable backend has one explanation and an actionable retry",
+      "passed": false,
+      "error": "Expected values to be strictly equal:\n\n2 !== 1\n",
+      "ms": 493
+    },
+    {
+      "name": "429 refresh retains a real session without false verification and recovers",
+      "passed": false,
+      "error": "locator.waitFor: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.exp-visitor-status strong').filter({ hasText: 'Session unconfirmed' }) to be visible\u001b[22m\n",
+      "ms": 15740
+    },
+    {
+      "name": "cancel after verification was minted rejects its late response and allows another sign-in",
+      "passed": false,
+      "error": "Expected backend state did not arrive",
+      "ms": 3634
+    }
+  ],
+  "errors": [],
+  "measurements": [],
+  "webkit": "Not run: browserType.launch:  ╔══════════════════════════════════════════════════════╗ ║ Host system is missing dependencies to run browsers. ║ ║ Missing libraries:                                   ║ ║     libgtk-4.so.1                                    ║",
+  "passed": 0,
+  "failed": 4
+}

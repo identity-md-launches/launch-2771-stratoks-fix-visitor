@@ -1,0 +1,359 @@
+{
+  "status": "passed",
+  "scope": "Frontend session recovery/cancellation integration; not a production or ARM deployment certification.",
+  "briefBase": "4671102884260ac798821bd32bfad7f462aacf7f",
+  "inheritedCommit": "e07ad898bcbc00edbbdea8be6a755f4f9257eff0",
+  "submissionCommit": "Assigned after handoff; no Git metadata written.",
+  "budgets": {
+    "submissionLimitBytes": 8388608,
+    "changedFileBytesExcludingThisManifest": 2208616,
+    "remainingBeforeManifestBytes": 6179992,
+    "evidencePath": "artifacts/visitor-recovery/**",
+    "evidenceLimitBytes": 2097152,
+    "evidenceBytesExcludingThisManifest": 1482235
+  },
+  "export": {
+    "files": 27,
+    "bytes": 5922944,
+    "relativeIndexAssets": [
+      "./favicon.png",
+      "./assets/index-BXlBJwhz.js",
+      "./assets/index-5NoqZk_g.css",
+      "./share-world.jpg"
+    ],
+    "filesAndSha256": {
+      "dist/art/agency-activities.webp": "ef09855239cd13a2bdee92209141c52e39a696ee9b886cf68c3657a91c6cb448",
+      "dist/art/agency-terrain.webp": "a1a9912662e08f06421e860349e31c7a44662bd50c02e3125bdae9b4742ee3db",
+      "dist/art/living-characters.webp": "80d4d8b0473961438a5c0fa00685eeed516345ddf629401861eb0ed4c1389841",
+      "dist/art/living-world.webp": "a9e13c3b2ce551d569a9ab757151c037ae62b40c6435c85725941219953c4caa",
+      "dist/art/manifest.json": "89bbc0cb86000d88a43b9367bfa8856a4795f7eb25542e635e2ee7140d23946a",
+      "dist/art/model.webp": "c2a5c2e698a919f7741c576c243586d0657f984c1eaf7b30c91be23456171835",
+      "dist/assets/demo.worker-nBCLUSwi.js": "3641dee8e4d77e1c0147b9e42e4e55e1ce7e903a5e11ba6a5a5b526e7bcd04c5",
+      "dist/assets/index-5NoqZk_g.css": "bc5cba44215fe96c61f9b43cf01265eaaecd1c42a21cef78d0afd90ff39d848d",
+      "dist/assets/index-BXlBJwhz.js": "7279ba8eca48080315579fe1c51661b247855be7223fe04613872b8f00fa0a42",
+      "dist/assets/manrope-latin-wght-normal-DHIcAJRg.woff2": "a30ddcd349703aff7464c34bef3fffdff405ee50c113440d7c8693c02d210972",
+      "dist/demo/agency-checkpoint.json.gz": "dfd1876c94afe40505583ed4f6094891bd8f5195439238e039bc44892ef907ab",
+      "dist/demo/agency-manifest.json": "eff1b2a76b6488669b5d41e3581d11f19128c790db22fc5dc1517036238ffbe6",
+      "dist/demo/checkpoint.json.gz": "cf2dcd95a83ffa1cc50975b40f9c6cb5829637ae0b3b9ff3f07846be12a5d716",
+      "dist/demo/manifest.json": "930126f9057c4bb93b4c924c43a2c56b6206e0b4a2d126170131aeb87baafd23",
+      "dist/expanse-config.json": "6418482c775f61811d44fc8d339c102beb065ecddea041ff7cfa5202791b161f",
+      "dist/favicon.png": "3d66a08dd48c25ad9b8931464178e435425a5fd35793c620b610f56e4f8d5b09",
+      "dist/favicon.svg": "3521e47e2025301dd21d3601ec30a18bd4c51162d3a5c131ff16b694b897227b",
+      "dist/index.html": "318f7a4b37351a56f09b6c7a57c27fc5467de9c30a71a4a99ac1eb19d9e786d6",
+      "dist/licenses/THIRD_PARTY_NOTICES.txt": "904d738f6688f759b70de248bcd2967bf52313104637c22bcb3a40586cf550fe",
+      "dist/licenses/client-and-art.txt": "6e74079f1931f630567f388f6ce9c6eb6899db08f2fbfc89330941608e3a8906",
+      "dist/licenses/dependencies.json": "834e4f123324136c2504888466da6abfb55e55c3f7e3fdcdd780820e6c36f6e1",
+      "dist/licenses/living-art.txt": "a829887ff0bb04bc3e1765ea574bb405efe35663720445720c699ae6d5857136",
+      "dist/licenses/manrope.txt": "d826ab6583b12c26807d8716a545bdbbb672df04f48608a364ba9efdbe501c30",
+      "dist/licenses/rainbowkit.txt": "5095037afa1ba03be36e04305c01ec9ee600e14377738a026482b1a888c4e365",
+      "dist/logo.svg": "68235a6d15d23a027ba8b34db9752808b1604f88f596cc655178073fb1b76aa8",
+      "dist/share-world.jpg": "06a39a201ed6896cf8262706c3d37ac9be7498d67286b1a6a8d5c5ea8964e2f4",
+      "dist/world-config.json": "6c04b749606afa71d027cc3c65895a2241948dade26cc8b6f0337f5416d50d83"
+    }
+  },
+  "immutableInputsUnchangedSha256": {
+    "web/package.json": "8fd8504677414687ff6831197c4c044d98fdc6e095c321674d264cbbd6d84a00",
+    "web/package-lock.json": "13ec56d88c1a75ce728928113554ac52129c7d687d3976c7f3a62aa43624af7b",
+    "web/vite.config.ts": "73012b23dbe98acd10ec33d3e797f12e0337d3582cd0f2965c597c8f75a77eb1",
+    "web/tsconfig.json": "ca99f1ffea5fc72e9fa010a68ef0cd85e80770267eee5960eec12186640e7b5f",
+    "server/package.json": "fa72308941f45d3f286009f71bfa93227fb0d93bf6bf19bbba59543ec1d21857",
+    "web/public/expanse-config.json": "6418482c775f61811d44fc8d339c102beb065ecddea041ff7cfa5202791b161f",
+    "dist/expanse-config.json": "6418482c775f61811d44fc8d339c102beb065ecddea041ff7cfa5202791b161f"
+  },
+  "checks": {
+    "nodeTests": 247,
+    "frontendTests": 51,
+    "frontendRootCases": 34,
+    "frontendExpanseCases": 17,
+    "authControllerCasesIncludedInNodeTests": 29,
+    "hudBrowserScenarios": 33,
+    "standaloneCompatibilityScenarios": 9,
+    "inspectorViewports": 5,
+    "tastePassed": 16,
+    "expectedFailingBeforeControllerCases": 8,
+    "expectedFailingBeforeRenderedCases": 4,
+    "forbiddenChanges": false,
+    "dependencyOrCacheAdditions": false,
+    "gitSubmodules": false,
+    "sharedDemoModulesMatch": true,
+    "simulationSourcesUnchanged": true
+  },
+  "limitations": [
+    "WebKit unavailable: missing host libraries",
+    "Supplied browser MCP unavailable: Chrome not installed at its configured path; local Playwright used",
+    "No actual extensions/devices/screen reader session",
+    "Docker/ARM build/start not verified",
+    "No production, deployed Caddy or current owner-world rehearsal",
+    "Comprehensive backend admission saturation campaign outside this frontend follow-up"
+  ],
+  "changedFilesExcludingThisManifest": {
+    ".gitignore": {
+      "bytes": 1519,
+      "sha256": "562bb101a08d3151e1d46af1f5a6afa4d05c3b8e9ad2ab8522bd0725ecbb18d0"
+    },
+    "DESIGN.md": {
+      "bytes": 17737,
+      "sha256": "b729d3075b5cad06b6993f8eb2fc0fe67783bca3683cbaced7bd0d4b9cc3a51d"
+    },
+    "README.md": {
+      "bytes": 15280,
+      "sha256": "ca41b447207ce83d7f662d7836993adda5318248556535747857cde086780fcf"
+    },
+    "artifacts/visitor-recovery/VALIDATION.md": {
+      "bytes": 17691,
+      "sha256": "a7ef52630abc9de40450a7ebf9128b971061a5668bf1712dee8259d6c7d9b181"
+    },
+    "artifacts/visitor-recovery/after-client.tap": {
+      "bytes": 3159,
+      "sha256": "84435d63ec614524134c58075ee572d43c7454b4646cb44044c3f0b0df82b8a3"
+    },
+    "artifacts/visitor-recovery/backend.tap": {
+      "bytes": 26116,
+      "sha256": "2e1bb6ec52964448a567b5ae5ad831f1af3a486a72ed7c70a1475ccce0b3dc48"
+    },
+    "artifacts/visitor-recovery/before-browser/results.json": {
+      "bytes": 1629,
+      "sha256": "b92454486f9d5b3414c555b938b8a4e32915102c514a81c76ab2926f10f1d34d"
+    },
+    "artifacts/visitor-recovery/before-browser.txt": {
+      "bytes": 619,
+      "sha256": "b4416d48ceb7a200260983a4d19f5846ef6c6a05b41d719c573a527bc40f1d7f"
+    },
+    "artifacts/visitor-recovery/before-client.tap": {
+      "bytes": 8041,
+      "sha256": "ba0f0b4984e0268b5d8f6c8124c0625234329b2ba8e4bdb59c4379da2ce220a0"
+    },
+    "artifacts/visitor-recovery/browser/hud-1440.jpg": {
+      "bytes": 88076,
+      "sha256": "88d63e18833e56dbc8138fad7e163c78dd70d76d7f950976b0b5cd4bfe37a297"
+    },
+    "artifacts/visitor-recovery/browser/hud-320.jpg": {
+      "bytes": 18346,
+      "sha256": "a98a9f09861c369d75cddd9a2236473984c55af5244163217b60b7f71f57cef7"
+    },
+    "artifacts/visitor-recovery/browser/hud-390.jpg": {
+      "bytes": 28198,
+      "sha256": "e4b59f656642a1881486224e469f920cb2cbd153d13066fef98fea9327eedd23"
+    },
+    "artifacts/visitor-recovery/browser/hud-768.jpg": {
+      "bytes": 56585,
+      "sha256": "ca7c07418e2b338ae4a729f40bfecf7378f87a3bbc50427aaa028dabef4bca7f"
+    },
+    "artifacts/visitor-recovery/browser/mobile-unconfirmed.jpg": {
+      "bytes": 24597,
+      "sha256": "285085265739f31ec61040a83eb10297712692dd254dfda34a3b6a5947e786c4"
+    },
+    "artifacts/visitor-recovery/browser/results.json": {
+      "bytes": 3625,
+      "sha256": "8533e7f6687cea50585b6e219b1838fbb258e61b282bb41efb74da27c446590f"
+    },
+    "artifacts/visitor-recovery/browser/static-connected.jpg": {
+      "bytes": 19612,
+      "sha256": "7b5c262fbfc89b020c0fdab165940d4e28b229b137cf233de178abe0a087227e"
+    },
+    "artifacts/visitor-recovery/browser/verified-320.jpg": {
+      "bytes": 16749,
+      "sha256": "28b5c49fe7b4a44f6c3d6f1a81b050141543642383b5ab743633b9dc1d8374b0"
+    },
+    "artifacts/visitor-recovery/browser/verified-390.jpg": {
+      "bytes": 21142,
+      "sha256": "8a9bf86801f1ca8b25d9a261992f6b28e2ff4dd706f13b3108a86b921c58c709"
+    },
+    "artifacts/visitor-recovery/browser.txt": {
+      "bytes": 1160,
+      "sha256": "fbbb5e6bbf99131ec3218ea007a6391dceaf0b8b27104149d68c669b1457a121"
+    },
+    "artifacts/visitor-recovery/build.txt": {
+      "bytes": 898,
+      "sha256": "0b4574746c263c8e1181abb4ccf1fd819791d9313974ed799ef43d9059d4cb5a"
+    },
+    "artifacts/visitor-recovery/existing-browser/browser.json": {
+      "bytes": 3758,
+      "sha256": "284a1b9b9fe78d634139dafb575eff7929d8b645ff58a5ee511fcbd51df9df80"
+    },
+    "artifacts/visitor-recovery/existing-browser/desktop-verified.jpg": {
+      "bytes": 42274,
+      "sha256": "cdee8ca0e89d0587d2e66e59538de091abbc000bb81edbb35c495a48e41467c0"
+    },
+    "artifacts/visitor-recovery/existing-browser/desktop-wallet-choice.jpg": {
+      "bytes": 40349,
+      "sha256": "a613c89ff32aa986488aa7dc3fc94a4226045a91aeae612d0de26123c7e5f1d5"
+    },
+    "artifacts/visitor-recovery/existing-browser/hud-1440.jpg": {
+      "bytes": 98503,
+      "sha256": "a0324fae2f00c2abafedeafb5d2aaea5bf37d72ec2389a21f1fc5818c640e75b"
+    },
+    "artifacts/visitor-recovery/existing-browser/hud-320.jpg": {
+      "bytes": 25209,
+      "sha256": "00496e814399bdc103dda8e6af0a957425160cbb20e0e44b3f15d93c7f431c23"
+    },
+    "artifacts/visitor-recovery/existing-browser/hud-390.jpg": {
+      "bytes": 28809,
+      "sha256": "261c0bc092503662112c5e1db054dc16a502bf5993515fbd64c5df6d6b3bfca0"
+    },
+    "artifacts/visitor-recovery/existing-browser/hud-768.jpg": {
+      "bytes": 61974,
+      "sha256": "5c14dcbb5c45abac605196a4ba0949b63d46ad2e246c118c7b164f0df0895951"
+    },
+    "artifacts/visitor-recovery/existing-browser/mobile-no-wallet.jpg": {
+      "bytes": 22114,
+      "sha256": "537cebcb437a28d709a82af8d622602c314081dc1f765042565c470d0686a974"
+    },
+    "artifacts/visitor-recovery/existing-browser/mobile-verified.jpg": {
+      "bytes": 21555,
+      "sha256": "a891358b930aa7262800583a1471e4bfbce44907d1f32ca3f9502fdef157c0e0"
+    },
+    "artifacts/visitor-recovery/existing-browser/static-connected.jpg": {
+      "bytes": 20705,
+      "sha256": "92a299e2c9cb9dcd0fd27c0cd03bc11ff475a0a6935fcb05224b7722244af394"
+    },
+    "artifacts/visitor-recovery/existing-browser/static-preview.jpg": {
+      "bytes": 20028,
+      "sha256": "07c9eb1692078c5f00e1d6862def9fd67308c6270b1de40dfbaea0a4fc8af1a9"
+    },
+    "artifacts/visitor-recovery/existing-hud-browser.txt": {
+      "bytes": 1539,
+      "sha256": "d67b1ce3ae37294325c99b6ef6aed05a72f8d678951f164f91abbd5e5ab2e8f5"
+    },
+    "artifacts/visitor-recovery/expanse-frontend.tap": {
+      "bytes": 1814,
+      "sha256": "7e84476cd7aeedd5f9c0c3d89126afdfa5159275c7738e972bf603cf3017ecb6"
+    },
+    "artifacts/visitor-recovery/frontend.tap": {
+      "bytes": 3463,
+      "sha256": "779830ef8e2ce85c725a7ffe9b6f59c70967b3057b0e6a710381b6c1629fc5b7"
+    },
+    "artifacts/visitor-recovery/inherited-client.tap": {
+      "bytes": 2109,
+      "sha256": "dee8997641d27eeadf279e8cb0dbfdddf6750c94bea155c635e36524b5306d07"
+    },
+    "artifacts/visitor-recovery/inspector/inspector-open-320x568.jpg": {
+      "bytes": 29852,
+      "sha256": "8d06494d084e4aa0909f30db0a9a6f82f7cef37ac6c6c722aa484568010bb4b6"
+    },
+    "artifacts/visitor-recovery/inspector/inspector-open-844x390.jpg": {
+      "bytes": 45722,
+      "sha256": "7688407490bc7b306f02c9bcdea59e74454e735ca2f4c4074868374121f8a23b"
+    },
+    "artifacts/visitor-recovery/inspector/inspector-scroll.json": {
+      "bytes": 2051,
+      "sha256": "66c7fbc811ea9b8e72d31bf47b451eda5fc5c215e837f2ad10490ab9cbaf1379"
+    },
+    "artifacts/visitor-recovery/inspector.txt": {
+      "bytes": 321,
+      "sha256": "82310cf8ea7444c36f3439cc6f35754fb8e138b8999fac95903e5e55d1a2341a"
+    },
+    "artifacts/visitor-recovery/standalone/browser.json": {
+      "bytes": 1423,
+      "sha256": "5245ef37d17f9ea25a60ff8ce8ee54b032c9fb6851781ead4a1dec816dc1e337"
+    },
+    "artifacts/visitor-recovery/standalone/desktop-verified.png": {
+      "bytes": 128713,
+      "sha256": "8b61031358e60f713f65d628d71121c2e00bd2dd43185f62753ab0db9aae2651"
+    },
+    "artifacts/visitor-recovery/standalone/desktop-wallet-choice.png": {
+      "bytes": 118028,
+      "sha256": "26a87698ea4ca068823c174ce12aae7110eaa9cf68ebdd5b6f6946e99f7d61fc"
+    },
+    "artifacts/visitor-recovery/standalone/mobile-no-wallet.png": {
+      "bytes": 122630,
+      "sha256": "9e00fd0e89dd61c59b55af31b042cd99bac49adbe6c1ed8414d97890f77965c3"
+    },
+    "artifacts/visitor-recovery/standalone/mobile-verified.png": {
+      "bytes": 129819,
+      "sha256": "69654a007f9b784b995c8da44f59cc7739288d55aa4372cbb4d28701d76e6771"
+    },
+    "artifacts/visitor-recovery/standalone/static-preview.png": {
+      "bytes": 135993,
+      "sha256": "015b4a1c8416232cd3559e71c3327de0caba6b6e28db1a7252ba4c077396edbe"
+    },
+    "artifacts/visitor-recovery/standalone.txt": {
+      "bytes": 678,
+      "sha256": "56150a1615bd2c0e16bf4680e058ae2b18c8ea6c202f23c3d18349741650f709"
+    },
+    "artifacts/visitor-recovery/taste-stdout.json": {
+      "bytes": 2929,
+      "sha256": "1b25228e921aadc4bc06a14d631609af8d16658c5cd48aff85ffb1221ba02ec8"
+    },
+    "artifacts/visitor-recovery/taste.json": {
+      "bytes": 33579,
+      "sha256": "78ba4dac10004c98298270ac0630b7a5f4a44776a53aab9e0771f828b0a58c70"
+    },
+    "artifacts/visitor-recovery/typecheck.txt": {
+      "bytes": 51,
+      "sha256": "5dd49aee2d19284cdaaad3bea1de7bf694c7423dafc55ba524de257025c1c9ab"
+    },
+    "deploy/auth-demo/demo.js": {
+      "bytes": 5181,
+      "sha256": "0f725f7275db2902b4d2f9966525b009aa8ddba069eb15f4ce60ff9ec6f2b9b8"
+    },
+    "deploy/auth-demo/shared/visitor-auth-client.js": {
+      "bytes": 19371,
+      "sha256": "36ad1e7328ee558b593363ba22b20d8ea9b51dc4641fbe51babee2e2ece11749"
+    },
+    "dist/assets/index-5NoqZk_g.css": {
+      "bytes": 64245,
+      "sha256": "bc5cba44215fe96c61f9b43cf01265eaaecd1c42a21cef78d0afd90ff39d848d"
+    },
+    "dist/assets/index-BXlBJwhz.js": {
+      "bytes": 416628,
+      "sha256": "7279ba8eca48080315579fe1c51661b247855be7223fe04613872b8f00fa0a42"
+    },
+    "dist/index.html": {
+      "bytes": 1182,
+      "sha256": "318f7a4b37351a56f09b6c7a57c27fc5467de9c30a71a4a99ac1eb19d9e786d6"
+    },
+    "docs/auth/API-v1.md": {
+      "bytes": 16011,
+      "sha256": "60a4faab9822a86b93c37a118b9d40f8ebeed67231bfb1d6df9f5f751b757952"
+    },
+    "docs/auth/FINDINGS.md": {
+      "bytes": 3015,
+      "sha256": "a6326d73109ee6e9055c568d4a4b53bbfb47ada85e7b3547e8ead937ff9335b8"
+    },
+    "docs/auth/SETUP.md": {
+      "bytes": 15968,
+      "sha256": "b2f3e6e426b0cb5f1fd06bef1c5eeaa07e9fa0b3ed0e1914afb86e57ac757123"
+    },
+    "docs/auth/VALIDATION.md": {
+      "bytes": 9269,
+      "sha256": "ff7ff9254750b20131808057cba32baac7dd3af4e8f24cca31683dfe0a054e87"
+    },
+    "shared/visitor-auth-client.d.ts": {
+      "bytes": 2467,
+      "sha256": "5a924160837c446ef75311844fc13ae418add56fa2a819ace850c7c05b14f3c5"
+    },
+    "shared/visitor-auth-client.js": {
+      "bytes": 19371,
+      "sha256": "36ad1e7328ee558b593363ba22b20d8ea9b51dc4641fbe51babee2e2ece11749"
+    },
+    "tests/browser/expanse-auth.mjs": {
+      "bytes": 11685,
+      "sha256": "41e13f314a135f3ba086828dad55745a6619435d6ff2e832f3d78039b73dbc17"
+    },
+    "tests/browser/expanse-hud-auth.mjs": {
+      "bytes": 22853,
+      "sha256": "f2affb48e1386a8dbbc1c7bf635c8235f71c0461e5128456c4aa40d411f91437"
+    },
+    "tests/browser/visitor-recovery.mjs": {
+      "bytes": 17310,
+      "sha256": "8127e651d2f8628213720332def772eb7b693c9a4a4cdda5607bfc240a8b9ddc"
+    },
+    "tests/expanse-auth-client.test.js": {
+      "bytes": 31305,
+      "sha256": "d9b8e0bfeea07dd3b540bfafed21758aec33adbcdea48f19ae8cafc0ccdc5038"
+    },
+    "tests/expanse-auth.test.js": {
+      "bytes": 19355,
+      "sha256": "9168b26f4bab7dbf0cbf86b5bf1c77ce759c9abc8fbf7236b84374532894b07f"
+    },
+    "web/src/expanse/VisitorWallet.tsx": {
+      "bytes": 14028,
+      "sha256": "6a4b39139b3c73e005fddf831421e516cc961de202187b4aaebb690ac6a4c476"
+    },
+    "web/src/expanse/visitor-wallet.css": {
+      "bytes": 2601,
+      "sha256": "18784021daf01625eaadfca51ff010773a2c6f5cdd4641472f654c4c8824afb2"
+    }
+  }
+}
