@@ -1,4 +1,4 @@
-export type AuthState = "disconnected" | "connected" | "signing" | "verified" | "expired" | "unavailable";
+export type AuthState = "disconnected" | "connected" | "signing" | "checking" | "verified" | "expired" | "unavailable";
 export interface Provider {
   request(args: { method: string; params?: unknown[] }): Promise<unknown>;
   on?(event: string, listener: (...args: any[]) => void): void;
@@ -16,7 +16,7 @@ export interface VisitorSession {
 }
 export interface AuthSnapshot {
   state: AuthState; error: string; address: string | null; chainId: number | null;
-  session: VisitorSession | null; busy: boolean;
+  session: VisitorSession | null; busy: boolean; retryAt: number; retryAfterUntil: number;
 }
 export function discoverWallets(target?: Window, legacy?: Provider): {
   readonly wallets: WalletChoice[]; subscribe(fn: (wallets: WalletChoice[]) => void): () => void; destroy(): void;
@@ -28,11 +28,12 @@ export class VisitorAuthClient implements AuthSnapshot {
   session: VisitorSession | null; config: AuthConfig | null; busy: boolean;
   revocations: Set<unknown>;
   pendingRequests: number; activeAttempts: number;
+  retryAt: number; retryAfterUntil: number;
   challenge: { message: string; cancellationSecret: string } | null;
   connect(provider: Provider): Promise<void>;
   loadConfig(): Promise<AuthConfig>;
   signIn(): Promise<void>;
-  refreshSession(): Promise<void>;
+  refreshSession(options?: { retryNow?: boolean }): Promise<void>;
   logout(): Promise<void>;
   retryRevocations(): Promise<void>;
   invalidate(reason?: string, state?: AuthState): void;

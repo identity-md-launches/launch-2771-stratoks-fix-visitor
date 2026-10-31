@@ -163,6 +163,30 @@ test('50 authenticated polling sessions do not consume sign-in peer quota', asyn
   assert.equal((await a.request('/api/auth/verify', a.proof(challenge))).status, 200);
 });
 
+test('50 real verified signers behind a trusted proxy poll at 30 seconds while another visitor signs in', async (t) => {
+  const a = await app(t, { trustedProxies: ['127.0.0.1'] });
+  const visitors = [];
+  const login = async (index) => {
+    const signer = randomBytes(32).toString('hex'), addr = addressFromPrivateKey(signer);
+    const forwarded = { 'x-forwarded-for': `198.51.100.${index}` };
+    const challenge = await a.request('/api/auth/nonce', { address: addr, chainId: 1 }, undefined, origin, forwarded);
+    assert.equal(challenge.status, 200);
+    const verified = await a.request('/api/auth/verify', a.proof(challenge.body, signer), undefined, origin, forwarded);
+    assert.equal(verified.status, 200); assert.equal(verified.body.address, addr);
+    return { token: verified.body.token, forwarded };
+  };
+  for (let i = 1; i <= 50; i++) visitors.push(await login(i));
+  const poll = () => Promise.all(visitors.map(async ({ token, forwarded }) => {
+    const response = await a.request('/api/auth/session', undefined, token, origin, forwarded);
+    assert.equal(response.status, 200); assert.equal(response.body.role, 'visitor');
+  }));
+  await poll(); a.advance(30_000);
+  const [, newVisitor] = await Promise.all([poll(), login(51)]);
+  a.advance(30_000); await poll();
+  assert.equal((await a.request('/api/auth/session', undefined, newVisitor.token, origin, newVisitor.forwarded)).status, 200);
+  assert.equal(a.svc.auth.sessions.size, 51);
+});
+
 test('per-peer/global rates and bounded rate-key map reject without affecting world', async (t) => {
   const a = await app(t, { perIpRequests: 2, rateWindowMs: 1000 });
   assert.equal((await a.request('/api/auth/config')).status, 200); assert.equal((await a.request('/api/auth/config')).status, 200);

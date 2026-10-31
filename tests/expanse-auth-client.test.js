@@ -56,7 +56,10 @@ test('transient session-check errors retain credentials, deduplicate checks and 
   };
   await Promise.all([client.refreshSession(), client.refreshSession(), client.refreshSession()]);
   assert.equal(calls, 1); assert.equal(client.session.token, session.token); assert.equal(client.state, 'unavailable');
-  client.fetch = native; await client.refreshSession(); assert.equal(client.session.token, session.token); assert.equal(client.state, 'verified');
+  client.fetch = native;
+  await client.refreshSession(); assert.equal(calls, 1, 'focus cannot bypass Retry-After');
+  for (let i = 0; client.state !== 'verified' && i < 40; i++) await delay(100);
+  assert.equal(client.session.token, session.token); assert.equal(client.state, 'verified');
 });
 
 test('account switch mid-signature cannot authenticate old or new account; retry recovers', async (t) => {
@@ -246,8 +249,9 @@ test('late logout acknowledgement cannot overwrite a newer verified account stat
   };
   const logout = client.logout(); await entered.promise;
   wallet.emit('accountsChanged', [wallet.address]);
-  hold = false; await client.signIn(); assert.equal(client.state, 'verified');
-  gate.resolve(); await logout;
+  hold = false; const signing = client.signIn();
+  gate.resolve(); await signing; assert.equal(client.state, 'verified');
+  await logout;
   assert.equal(client.state, 'verified'); assert.ok(client.session);
 });
 
@@ -262,4 +266,173 @@ test('expiry timer clears verification and revokes server credential without cha
 
 test('delivered static preview modules match the authoritative shared client bytes', () => {
   for (const name of ['visitor-auth-client.js', 'visitor-challenge.js']) assert.equal(fs.readFileSync(new URL('../shared/' + name, import.meta.url), 'utf8'), fs.readFileSync(new URL('../deploy/auth-demo/shared/' + name, import.meta.url), 'utf8'));
+});
+
+test('recovery: transient config checks retain an existing credential without claiming verification', async (t) => {
+  const { client, svc } = await app(t); await client.signIn(); const token = client.session.token;
+  const native = client.fetch;
+  client.fetch = async (...args) => args[0].endsWith('/config') ? new Response('{"error":"maintenance"}', { status: 503 }) : native(...args);
+  await assert.rejects(client.loadConfig());
+  assert.equal(client.session?.token, token); assert.equal(client.state, 'unavailable');
+  assert.equal(client.revocations.size, 0); assert.ok(svc.auth.session(token, origin));
+  client.fetch = native; await client.loadConfig();
+  assert.equal(client.state, 'unavailable', 'capabilities are not a session verification');
+  await client.refreshSession({ retryNow: true }); assert.equal(client.state, 'verified');
+});
+
+test('recovery: only explicit invalid-session replies expire a session; generic proxy errors do not', async (t) => {
+  const { client } = await app(t); await client.signIn(); const token = client.session.token;
+  const native = client.fetch;
+  for (const [status, error] of [[429, 'rate_limited'], [500, 'internal'], [503, 'maintenance'], [401, 'proxy_login'], [403, 'origin_not_allowed']]) {
+    client.fetch = async (...args) => args[0].endsWith('/session') ? new Response(JSON.stringify({ error }), { status }) : native(...args);
+    await client.refreshSession({ retryNow: true });
+    assert.equal(client.session?.token, token, `${status} ${error}`);
+    assert.equal(client.state, 'unavailable'); assert.equal(client.revocations.size, 0);
+  }
+  for (const name of ['TypeError', 'AbortError']) {
+    client.fetch = async (...args) => { if (args[0].endsWith('/session')) throw Object.assign(new Error('offline'), { name }); return native(...args); };
+    await client.refreshSession({ retryNow: true }); assert.equal(client.session?.token, token); assert.equal(client.state, 'unavailable');
+  }
+  client.fetch = async (...args) => args[0].endsWith('/session') ? new Response('{"error":"session_scope_mismatch"}', { status: 403 }) : native(...args);
+  await client.refreshSession({ retryNow: true }); assert.equal(client.session, null); assert.equal(client.state, 'expired');
+});
+
+test('recovery: manual success cancels old backoff and refreshes are deduplicated', async (t) => {
+  const { client } = await app(t); await client.signIn(); const native = client.fetch;
+  let calls = 0, fail = true;
+  client.fetch = async (...args) => { if (args[0].endsWith('/session')) { calls++; if (fail) return new Response('{"error":"maintenance"}', { status: 503 }); } return native(...args); };
+  await client.refreshSession(); assert.ok(client.retryTimer);
+  fail = false; await client.refreshSession({ retryNow: true });
+  assert.equal(client.state, 'verified'); assert.equal(client.retryTimer, null); assert.equal(client.retryAttempt, 0);
+  const gate = deferred(), entered = deferred();
+  client.fetch = async (...args) => { if (args[0].endsWith('/session')) { calls++; entered.resolve(); await gate.promise; } return native(...args); };
+  const first = client.refreshSession(); await entered.promise;
+  assert.equal(client.state, 'checking');
+  const second = client.refreshSession(); gate.resolve(); await Promise.all([first, second]);
+  assert.equal(calls, 3); assert.equal(client.state, 'verified');
+});
+
+test('recovery: Retry-After is a lower bound, including dates and delays longer than a minute', async (t) => {
+  const { client } = await app(t); await client.signIn(); const native = client.fetch;
+  for (const header of ['120', new Date(Date.now() + 120_000).toUTCString()]) {
+    let calls = 0;
+    client.fetch = async (...args) => { if (args[0].endsWith('/session')) { calls++; return new Response('{"error":"rate_limited"}', { status: 429, headers: { 'retry-after': header } }); } return native(...args); };
+    // Start a fresh retry window for each independently exercised header.
+    client.retryAfterUntil = 0; client.retryAt = 0;
+    const before = Date.now(); await client.refreshSession({ retryNow: true });
+    assert.ok(client.retryAt >= before + 118_000, `${header}: ${client.retryAt - before}ms`);
+    await Promise.all([client.refreshSession(), client.refreshSession({ retryNow: true })]);
+    assert.equal(calls, 1, 'focus, polling and manual retries honor server cooldown');
+    assert.equal(client.state, 'unavailable');
+  }
+});
+
+test('recovery: a stale refresh cannot block or reset a newer session refresh', async (t) => {
+  const { client, wallet } = await app(t); await client.signIn(); const native = client.fetch;
+  const gates = [deferred(), deferred()], entered = [deferred(), deferred()]; let calls = 0;
+  client.fetch = async (...args) => {
+    const response = await native(...args);
+    if (args[0].endsWith('/session')) { const i = calls++; entered[i]?.resolve(); await gates[i]?.promise; }
+    return response;
+  };
+  const old = client.refreshSession(); await entered[0].promise;
+  wallet.emit('accountsChanged', [wallet.address]); await client.signIn(); const token = client.session.token;
+  const fresh = client.refreshSession();
+  // Give the HTTP request a bounded opportunity to enter; always release both gates on failure.
+  try {
+    await Promise.race([entered[1].promise, delay(500)]);
+    assert.equal(calls, 2, 'new generation must have its own refresh');
+    gates[0].resolve(); await old;
+    const duplicate = client.refreshSession();
+    gates[1].resolve(); await Promise.all([fresh, duplicate]);
+    assert.equal(calls, 2); assert.equal(client.session.token, token); assert.equal(client.state, 'verified');
+  } finally { for (const gate of gates) gate.resolve(); await Promise.all([old, fresh]); }
+});
+
+test('recovery: late nonce cannot overwrite the cancellation secret of a newer signing attempt', async (t) => {
+  const { client, wallet, svc } = await app(t); const native = client.fetch;
+  const oldNonce = deferred(), releaseNonce = deferred(), newSignature = deferred(), releaseSignature = deferred(); let nonceCalls = 0;
+  client.fetch = async (...args) => {
+    const response = await native(...args);
+    if (args[0].endsWith('/nonce') && nonceCalls++ === 0) { oldNonce.resolve(); await releaseNonce.promise; }
+    return response;
+  };
+  const old = client.signIn(); await oldNonce.promise; client.invalidate('Cancelled');
+  wallet.sign = async (message) => { newSignature.resolve(); await releaseSignature.promise; return signForTests(message, wallet.key); };
+  const fresh = client.signIn(); await newSignature.promise; const secret = client.cancellationSecret;
+  try {
+    releaseNonce.resolve(); await old;
+    assert.equal(client.cancellationSecret, secret);
+    client.invalidate('Cancelled'); await client.retryRevocations();
+    assert.equal(svc.auth.nonces.size, 0);
+    releaseSignature.resolve(); await fresh; await client.retryRevocations();
+    assert.equal(client.session, null); assert.equal(svc.auth.sessions.size, 0); assert.equal(client.revocations.size, 0);
+  } finally { releaseNonce.resolve(); releaseSignature.resolve(); await Promise.all([old, fresh]); }
+});
+
+test('recovery: cancelling a delayed verify queues no malformed nonce-only revocations', async (t) => {
+  const { client, svc } = await app(t); const native = client.fetch, entered = deferred(), release = deferred();
+  client.fetch = async (...args) => { const response = await native(...args); if (args[0].endsWith('/verify')) { entered.resolve(); await release.promise; } return response; };
+  const attempt = client.signIn(); await entered.promise; assert.equal(svc.auth.sessions.size, 1);
+  client.invalidate('Cancelled'); await client.retryRevocations(); release.resolve(); await attempt;
+  assert.equal(svc.auth.sessions.size, 0); assert.equal(client.revocations.size, 0);
+  await client.signIn(); assert.equal(client.state, 'verified', client.error);
+});
+
+test('recovery: logout requests share one in-flight revocation and require acknowledgement', async (t) => {
+  const { client } = await app(t); await client.signIn(); const native = client.fetch;
+  const entered = deferred(), release = deferred(); let calls = 0;
+  client.fetch = async (...args) => { if (args[0].endsWith('/logout')) { calls++; entered.resolve(); await release.promise; return new Response('{}'); } return native(...args); };
+  const logout = client.logout(); await entered.promise; release.resolve(); await logout;
+  assert.equal(calls, 1); assert.equal(client.session, null); assert.equal(client.revocations.size, 1);
+  assert.match(client.error, /pending/);
+  client.fetch = native; await client.logout(); assert.equal(client.revocations.size, 0); assert.match(client.error, /Signed out on the server/);
+});
+
+test('recovery: automatic retries grow with bounded jitter, recover, and stop on logout (virtual clock)', async (t) => {
+  const now = Date.now(); t.mock.timers.enable({ apis: ['setTimeout', 'Date'], now });
+  const client = new VisitorAuthClient({ baseUrl: origin, uri, origin });
+  t.after(() => client.destroy());
+  const token = randomBytes(32).toString('hex'), address = addressFromPrivateKey(randomBytes(32).toString('hex'));
+  const session = { version: 1, token, address, chainId: 1, origin, uri, world: 'world-20260101-0:' + randomBytes(32).toString('hex'), role: 'visitor', expiresAt: now + 3_600_000,
+    profile: { address, visitCount: 1, firstVerifiedAt: now, lastVerifiedAt: now } };
+  client.session = session; client.address = address;
+  let calls = 0, failed = true;
+  client.request = async (route) => {
+    if (route === 'logout') return { version: 1, loggedOut: true };
+    calls++; if (failed) throw Object.assign(new Error('maintenance'), { status: 503 });
+    return session;
+  };
+  await client.refreshSession();
+  for (let i = 0; i < 8; i++) {
+    const wait = client.retryAt - Date.now(), backoff = Math.min(30_000, 1000 * 2 ** Math.min(i, 5));
+    assert.ok(wait >= backoff * .75 && wait <= Math.min(30_000, Math.ceil(backoff * 1.25)));
+    assert.equal(client.session.token, token); assert.equal(client.state, 'unavailable');
+    t.mock.timers.tick(wait); await new Promise(setImmediate);
+  }
+  assert.equal(calls, 9);
+  failed = false; t.mock.timers.tick(client.retryAt - Date.now()); await new Promise(setImmediate);
+  assert.equal(client.state, 'verified'); assert.equal(client.retryTimer, null); assert.equal(calls, 10);
+  failed = true; await client.refreshSession(); await client.logout();
+  const afterLogout = calls; t.mock.timers.tick(120_000); await new Promise(setImmediate);
+  assert.equal(calls, afterLogout); assert.equal(client.session, null);
+});
+
+test('recovery: structured scope and control characters are checked before any wallet signature', async (t) => {
+  const { client, wallet, svc } = await app(t); const native = client.fetch;
+  // The service scope is structured, while the underlying existing world ID may be non-UUID.
+  const structured = 'world-20260101-0:' + randomBytes(32).toString('hex');
+  svc.auth.world = structured; await client.loadConfig(); await client.signIn();
+  assert.equal(client.state, 'verified'); assert.equal(client.session.world, structured); await client.logout();
+  const signatures = wallet.methods.filter((m) => m === 'personal_sign').length;
+  for (const [field, value] of [['world', structured + '\nPermissions: all'], ['domain', 'world.example\r\n'], ['origin', origin + '\u0085'], ['uri', uri + '\u2028']]) {
+    client.fetch = async (...args) => {
+      const response = await native(...args);
+      if (!args[0].endsWith('/nonce')) return response;
+      return new Response(JSON.stringify({ ...await response.json(), [field]: value }));
+    };
+    await client.signIn(); assert.equal(client.session, null); assert.match(client.error, /Mismatched/);
+  }
+  assert.equal(wallet.methods.filter((m) => m === 'personal_sign').length, signatures);
+  client.fetch = native; await client.signIn(); assert.equal(client.state, 'verified');
 });

@@ -3,14 +3,15 @@ import { discoverWallets, VisitorAuthClient, type AuthSnapshot, type WalletChoic
 import { Icon } from "../icons";
 import { Modal } from "../Modal";
 
-const initial: AuthSnapshot = { state: "disconnected", error: "", address: null, chainId: null, session: null, busy: false };
+const initial: AuthSnapshot = { state: "disconnected", error: "", address: null, chainId: null, session: null, busy: false, retryAt: 0, retryAfterUntil: 0 };
 const labels = {
   disconnected: "Disconnected", connected: "Connected · not signed in", signing: "Signing in…",
-  verified: "Verified visitor", expired: "Session expired", unavailable: "Sign-in unavailable",
+  checking: "Checking session…", verified: "Verified visitor", expired: "Session expired", unavailable: "Sign-in unavailable",
 };
 const short = (s: string) => `${s.slice(0, 6)}…${s.slice(-4)}`;
 function readable(error: string) {
-  if (/Failed to fetch|NetworkError|Load failed/i.test(error)) return "The sign-in server is offline or has not allowed this preview. Browsing is still available. Check the connection and retry.";
+  if (/Failed to fetch|NetworkError|Load failed/i.test(error)) return "The sign-in server cannot be reached. Keep browsing or check availability to retry.";
+  if (/does not offer compatible visitor sign-in/.test(error)) return "This world has not enabled compatible visitor sign-in. Keep browsing or check availability to retry.";
   if (/rate_limited|store_full/.test(error)) return "The sign-in server is at its request or account limit. Wait a minute and retry; if it continues, ask the world operator.";
   if (/unsupported_chain/.test(error)) return "Choose a supported network in your wallet, then retry.";
   if (/nonce_expired|unknown_or_used_nonce/.test(error)) return "The sign-in message expired or was already used. Retry for a fresh message.";
@@ -27,6 +28,7 @@ export function VisitorWallet({ backendUrl, worldId, open, onOpen, onClose }: {
   const [checking, setChecking] = useState(false);
   const [pendingWallet, setPendingWallet] = useState<string | null>(null);
   const [offlineRevocations, setOfflineRevocations] = useState(0);
+  const [retryReady, setRetryReady] = useState(true);
   const connectTicket = useRef(0);
   const client = useRef<VisitorAuthClient | null>(null);
   // Old services stay private while offline revocations are retried. No credential enters React state/storage.
@@ -57,9 +59,12 @@ export function VisitorWallet({ backendUrl, worldId, open, onOpen, onClose }: {
       c.retryRevocations().finally(() => releaseRetired(c)).catch(() => {});
     };
   }, [backendUrl, worldId]);
-  useEffect(() => () => {
-    mounted.current = false;
-    for (const c of retired.current) c.retryRevocations().catch(() => {});
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      for (const c of retired.current) c.retryRevocations().catch(() => {});
+    };
   }, []);
 
   async function checkAvailability() {
@@ -71,7 +76,8 @@ export function VisitorWallet({ backendUrl, worldId, open, onOpen, onClose }: {
   }
   useEffect(() => { void checkAvailability(); }, [backendUrl, worldId]);
   useEffect(() => {
-    // Poll only a verified session, well below the bounded auth rate. Recheck on tab focus/online too.
+    // Retained, unconfirmed sessions must recover too. The controller owns backoff,
+    // Retry-After and deduplication across polling, focus, online and the retry action.
     let reading = false;
     const refresh = async () => {
       if (reading) return;
@@ -93,22 +99,30 @@ export function VisitorWallet({ backendUrl, worldId, open, onOpen, onClose }: {
     return () => { clearInterval(timer); removeEventListener("focus", onFocus); removeEventListener("online", onFocus); document.removeEventListener("visibilitychange", onFocus); };
   }, []);
   useEffect(() => { if (open && client.current?.session) void client.current.refreshSession(); }, [open]);
+  useEffect(() => {
+    const delay = Math.max(0, snapshot.retryAfterUntil - Date.now());
+    setRetryReady(delay === 0);
+    if (delay) { const timer = setTimeout(() => setRetryReady(true), delay); return () => clearTimeout(timer); }
+  }, [snapshot.retryAfterUntil]);
 
   const c = client.current;
   const available = !!c?.config;
   const state = backendUrl || snapshot.address ? snapshot.state : "unavailable";
   const supported = !!c?.config?.chains.includes(snapshot.chainId ?? -1);
   const reason = snapshot.busy ? "Waiting for the wallet or server. This action will time out; you can also cancel below."
-    : !backendUrl
-    ? "This is an isolated preview. Connect a world server in Choose world to use a visitor account."
-    : checking ? "Checking whether this world offers visitor sign-in…"
-    : !available ? "This world has not enabled compatible visitor sign-in, or its backend is unavailable."
+    : snapshot.session && state === "checking" ? "Confirming this session with the server. You can keep browsing or sign out."
+    : snapshot.session && state !== "verified" ? "Sign-in is temporarily unconfirmed. Your credential stays in this tab; the session check will retry automatically. You can keep browsing or sign out."
     : snapshot.session ? `Verified on chain ${snapshot.session.chainId}. This session ends on expiry, reload or server restart.`
+    : !backendUrl
+    ? snapshot.error ? readable(snapshot.error) : "This is an isolated preview. Connect a world server in Choose world to use a visitor account."
+    : checking ? "Checking whether this world offers visitor sign-in…"
+    : available && snapshot.address && !supported ? `Select chain ${c?.config?.chains.join(" or ")} in your wallet. Network is part of the signed message; no transaction is sent.`
+    : snapshot.error ? readable(snapshot.error)
+    : !available ? "This world has not enabled compatible visitor sign-in, or its backend is unavailable."
     : !snapshot.address ? "Choose and unlock a wallet first. Connecting alone does not sign you in."
-    : !supported ? `Select chain ${c?.config?.chains.join(" or ")} in your wallet. Network is part of the signed message; no transaction is sent.`
     : "Sign a readable, free message. No gas, transaction, asset approval or private key.";
-  const status = checking ? "Checking sign-in availability" : labels[state];
-  const buttonText = snapshot.address ? (state === "verified" ? "Verified" : state === "signing" ? "Signing…" : state === "expired" ? "Expired" : "Wallet") : "Connect";
+  const status = checking ? "Checking sign-in availability" : snapshot.session && state === "unavailable" ? "Session unconfirmed" : labels[state];
+  const buttonText = snapshot.address ? (state === "verified" ? "Verified" : state === "checking" || snapshot.session ? "Check" : state === "signing" ? "Signing…" : state === "expired" ? "Expired" : "Wallet") : "Connect";
   const pendingRevocation = (c?.revocations.size ?? 0) + offlineRevocations > 0;
 
   return <>
@@ -118,13 +132,15 @@ export function VisitorWallet({ backendUrl, worldId, open, onOpen, onClose }: {
       <span className="exp-wallet-compact">{buttonText}</span>
       <span className="exp-wallet-wide">{snapshot.address ? `${short(snapshot.address)} · ${buttonText}` : "Connect wallet"}</span>
     </button>
-    <span className="sr-only" role="status">{status}</span>
+    {!open && <span className="sr-only" role="status" aria-atomic="true">{snapshot.address ? status : ""}</span>}
     {open && <Modal title="Visitor account" onClose={onClose}>
       <div className="exp-visitor" data-auth-state={state}>
-        <div className="exp-visitor-status"><Icon name={state === "verified" ? "check" : "wallet"} size={20} /><strong role="status">{status}</strong></div>
-        <p className="exp-muted">Viewing is always free and walletless. Signing in records a private verified visit. It gives no world controls or resident memories.</p>
+        <div className="exp-visitor-feedback" role="status" aria-atomic="true">
+          <div className="exp-visitor-status"><Icon name={state === "verified" ? "check" : "wallet"} size={20} /><strong>{status}</strong></div>
+          <p id="visitor-reason" className="exp-visitor-reason">{reason}</p>
+        </div>
+        <p className="exp-muted">Viewing stays walletless. Sign-in records a private visit and gives no world controls or resident memories.</p>
         {snapshot.address && <p className="exp-visitor-address" aria-label="Connected wallet address">{snapshot.address}</p>}
-        <p id="visitor-reason" className="exp-visitor-reason">{reason}</p>
         {backendUrl && <p className="exp-small exp-muted exp-visitor-service">World service: <span>{backendUrl}</span></p>}
         {!snapshot.address && <div className="exp-visitor-wallets" aria-label="Choose a wallet">
           {wallets.map((w, i) => <button key={`${w.id}-${i}`} className="exp-visitor-wallet" disabled={snapshot.busy} aria-describedby="visitor-reason" onClick={async () => {
@@ -138,14 +154,14 @@ export function VisitorWallet({ backendUrl, worldId, open, onOpen, onClose }: {
           </button>)}
           {!wallets.length && <p className="exp-small exp-muted">No wallet found. Use MetaMask, Rabby or a compatible EVM extension. On a phone, open this page inside your wallet’s own browser and unlock it. An ordinary mobile browser cannot connect here.</p>}
         </div>}
-        {!backendUrl && <p className="exp-small exp-muted">Wallet sign-in is available only with an owner-run backend. The browser demo has no visitor accounts.</p>}
         {snapshot.session && <dl className="exp-visitor-profile">
-          <div><dt>Verified visits</dt><dd>{snapshot.session.profile.visitCount.toLocaleString()}</dd></div>
-          <div><dt>Session ends</dt><dd>{new Date(snapshot.session.expiresAt).toLocaleTimeString()}</dd></div>
+          <div><dt>{state === "verified" ? "Verified visits" : "Last confirmed visits"}</dt><dd>{snapshot.session.profile.visitCount.toLocaleString()}</dd></div>
+          <div><dt>Credential expires</dt><dd>{new Date(snapshot.session.expiresAt).toLocaleTimeString()}</dd></div>
           <div><dt>First verified visit</dt><dd>{new Date(snapshot.session.profile.firstVerifiedAt).toLocaleDateString()}</dd></div>
         </dl>}
         {!snapshot.session && backendUrl && <button className="exp-button primary" disabled={!available || checking || !snapshot.address || !supported || snapshot.busy} aria-describedby="visitor-reason" onClick={() => void c?.signIn()}>Sign in with message<Icon name="arrow" size={17} /></button>}
         {snapshot.busy && <button className="exp-button" onClick={() => { ++connectTicket.current; c?.invalidate("Attempt cancelled. Dismiss any wallet prompt before retrying."); setPendingWallet(null); }}>Cancel attempt</button>}
+        {snapshot.session && state !== "verified" && <button className="exp-button" disabled={state === "checking" || !retryReady} aria-describedby="visitor-reason" onClick={() => void c?.refreshSession({ retryNow: true })}>{state === "checking" ? "Checking session…" : !retryReady ? "Retry scheduled" : "Retry session check"}</button>}
         {snapshot.session && <button className="exp-button" onClick={() => void c?.logout()}>Sign out</button>}
         {pendingRevocation && <button className="exp-button" disabled={snapshot.busy} onClick={async () => {
           await c?.logout();
@@ -157,10 +173,9 @@ export function VisitorWallet({ backendUrl, worldId, open, onOpen, onClose }: {
           if (client.current === c) c?.disconnect();
         })()}>Disconnect wallet</button>}
         {!available && backendUrl && <button className="exp-button" disabled={checking || snapshot.busy} onClick={() => void checkAvailability()}>Check sign-in availability</button>}
-        <p className="exp-visitor-error" role="status">{readable(snapshot.error)}</p>
         {pendingRevocation && <p className="exp-small exp-visitor-error">Server revocation is pending. Retry while this tab is open. Otherwise the old session lasts until expiry or server restart.</p>}
         <details className="exp-visitor-details"><summary>Privacy and wallet support</summary>
-          <p>Sessions stay only in this tab’s memory and end on expiry, reload or server restart. Private visit history stays on the world server. Login never pauses, resets or advances the simulation.</p>
+          <p>Sessions stay only in this tab’s memory and end on expiry, reload or server restart. Private visit history stays on the world server, subject to the owner’s retention policy for inactive visitor records. Resident memory is separate. Login never pauses, resets or advances the simulation.</p>
           <p>Only simulated MetaMask/Rabby-style providers were tested. Actual extensions and mobile devices are untested. Compatible injected EVM account wallets may work. Smart contract wallets, Coinbase Smart Wallet and WalletConnect are not supported by this signature verifier.</p>
         </details>
       </div>

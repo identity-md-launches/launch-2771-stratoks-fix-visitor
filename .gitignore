@@ -41,3 +41,7 @@ artifacts/*
 # Visitor HUD validation/screenshots: explicit combined path budget 1048576 bytes.
 !artifacts/visitor-auth/
 !artifacts/visitor-auth/**
+
+# Session recovery evidence/screenshots: explicit combined path budget 2097152 bytes.
+!artifacts/visitor-recovery/
+!artifacts/visitor-recovery/**

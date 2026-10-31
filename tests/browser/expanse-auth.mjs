@@ -9,10 +9,10 @@ import { randomBytes } from 'node:crypto';
 import { startDemo } from '../../deploy/auth-demo/server.mjs';
 import { addressFromPrivateKey, signForTests } from '../../server/src/wallet.js';
 const { chromium } = await import(pathToFileURL(process.argv[2]).href);
-const browser = await chromium.launch({ executablePath: process.argv[3], headless: true, args: ['--no-sandbox'] });
+const browser = await chromium.launch({ executablePath: process.argv[3] === '-' ? undefined : process.argv[3], headless: true, args: ['--no-sandbox'] });
 const demo = await startDemo({ port: 0, tickMs: 200 });
 const results = []; const errors = [];
-const shotDir = new URL('../../docs/auth/screenshots/', import.meta.url);
+const shotDir = process.argv[4] ? pathToFileURL(process.argv[4].replace(/\/?$/, '/')) : new URL('../../docs/auth/screenshots/', import.meta.url);
 fs.mkdirSync(shotDir, { recursive: true });
 const key = randomBytes(32).toString('hex'), address = addressFromPrivateKey(key);
 let signMode = 'normal', heldResolve, enteredResolve;
@@ -69,6 +69,16 @@ try {
     assert.equal(await page.evaluate(() => window.testWallets[1].methods.every((m) => ['eth_requestAccounts', 'eth_accounts', 'eth_chainId', 'personal_sign'].includes(m))), true);
     await page.screenshot({ path: new URL('desktop-verified.png', shotDir).pathname });
     assert.equal(demo.backend.auth.sessions.size, 1);
+  });
+  await check('standalone consumer keeps transient session checks unconfirmed and recovers', async () => {
+    await page.route('**/api/auth/session', (route) => route.fulfill({ status: 503, contentType: 'application/json', body: '{"error":"maintenance"}' }));
+    await page.evaluate(() => dispatchEvent(new Event('focus')));
+    await page.waitForFunction(() => document.getElementById('status').textContent === 'Session unconfirmed');
+    assert.match(await page.locator('#account').textContent(), /last confirmed visits/);
+    assert.doesNotMatch(await page.locator('#reason').textContent(), /Already verified/);
+    assert.equal(demo.backend.auth.sessions.size, 1);
+    await page.unroute('**/api/auth/session');
+    await page.waitForFunction(() => document.getElementById('status').textContent === 'Verified visitor');
   });
   await check('server-verified logout and rejected signature retry', async () => {
     await page.locator('#logout').click(); await page.waitForFunction(() => document.getElementById('error').textContent.includes('Signed out on the server'));
@@ -133,5 +143,5 @@ try {
     } finally { await page.close(); await new Promise((r) => staticServer.close(r)); }
   });
   assert.deepEqual(errors, []);
-  fs.writeFileSync(new URL('../results/auth/browser.json', import.meta.url), JSON.stringify({ browser: 'Chromium headless', wallets: 'simulated EIP-1193/EIP-6963 providers, disposable signer; NOT actual extensions/devices', tests: results, pageErrors: errors }, null, 2) + '\n');
+  fs.writeFileSync(process.argv[4] ? new URL('browser.json', shotDir) : new URL('../results/auth/browser.json', import.meta.url), JSON.stringify({ browser: 'Chromium headless', wallets: 'simulated EIP-1193/EIP-6963 providers, disposable signer; NOT actual extensions/devices', tests: results, pageErrors: errors }, null, 2) + '\n');
 } finally { await browser.close(); await demo.stop(); }

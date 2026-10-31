@@ -1,0 +1,126 @@
+{
+  "mode": "updated export",
+  "providers": "Simulated EIP-6963 and legacy EIP-1193; real randomly generated EOA signatures and real HTTP verification. No extensions/devices.",
+  "checks": [
+    {
+      "name": "one auth live region in the open dialog, including errors",
+      "passed": true,
+      "ms": 668
+    },
+    {
+      "name": "unavailable backend has one explanation and an actionable retry",
+      "passed": true,
+      "ms": 1023
+    },
+    {
+      "name": "429 refresh retains a real session without false verification and recovers",
+      "passed": true,
+      "ms": 3427
+    },
+    {
+      "name": "503 refresh retains a real session without false verification and recovers",
+      "passed": true,
+      "ms": 3377
+    },
+    {
+      "name": "offline refresh retains a real session without false verification and recovers",
+      "passed": true,
+      "ms": 1027
+    },
+    {
+      "name": "timeout refresh retains a real session without false verification and recovers",
+      "passed": true,
+      "ms": 12365
+    },
+    {
+      "name": "cancel after verification was minted rejects its late response and allows another sign-in",
+      "passed": true,
+      "ms": 781
+    },
+    {
+      "name": "account and network switches during an unconfirmed refresh never resurrect the old credential",
+      "passed": true,
+      "ms": 1230
+    },
+    {
+      "name": "explicit logout remains available during Retry-After and ends server authentication",
+      "passed": true,
+      "ms": 685
+    },
+    {
+      "name": "320px anonymous world, camera, inspector, wallet selection and keyboard layout",
+      "passed": true,
+      "ms": 822
+    },
+    {
+      "name": "390px anonymous world, camera, inspector, wallet selection and keyboard layout",
+      "passed": true,
+      "ms": 881
+    },
+    {
+      "name": "768px anonymous world, camera, inspector, wallet selection and keyboard layout",
+      "passed": true,
+      "ms": 1019
+    },
+    {
+      "name": "1440px anonymous world, camera, inspector, wallet selection and keyboard layout",
+      "passed": true,
+      "ms": 1200
+    },
+    {
+      "name": "static demo permits wallet connection but makes no authentication requests",
+      "passed": true,
+      "ms": 686
+    }
+  ],
+  "errors": [],
+  "measurements": [
+    {
+      "width": 320,
+      "scrollWidth": 320,
+      "mainAction": {
+        "top": 8,
+        "bottom": 52,
+        "right": 266
+      },
+      "title": "STRATOKS · A world taking root",
+      "fontLoaded": true
+    },
+    {
+      "width": 390,
+      "scrollWidth": 390,
+      "mainAction": {
+        "top": 8,
+        "bottom": 52,
+        "right": 334
+      },
+      "title": "STRATOKS · A world taking root",
+      "fontLoaded": true
+    },
+    {
+      "width": 768,
+      "scrollWidth": 768,
+      "mainAction": {
+        "top": 12,
+        "bottom": 56,
+        "right": 662
+      },
+      "title": "STRATOKS · A world taking root",
+      "fontLoaded": true
+    },
+    {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "mainAction": {
+        "top": 12,
+        "bottom": 56,
+        "right": 1320
+      },
+      "title": "STRATOKS · A world taking root",
+      "fontLoaded": true
+    }
+  ],
+  "webkit": "Not run: browserType.launch:  ╔══════════════════════════════════════════════════════╗ ║ Host system is missing dependencies to run browsers. ║ ║ Missing libraries:                                   ║ ║     libgtk-4.so.1                                    ║",
+  "passed": 14,
+  "failed": 0
+}

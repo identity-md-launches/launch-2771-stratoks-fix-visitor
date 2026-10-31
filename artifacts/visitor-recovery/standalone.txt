@@ -1,0 +1,9 @@
+PASS multiple EIP-6963 wallets require visitor choice; anonymous world is visible
+PASS real server verification and private profile; screenshot
+PASS standalone consumer keeps transient session checks unconfirmed and recovers
+PASS server-verified logout and rejected signature retry
+PASS network change clears verified UI and revokes old credential
+PASS account switch while signature is pending never authenticates late response
+PASS mobile without injected wallet explains requirements; screenshot; walletless ticks continue
+PASS simulated injected mobile provider can verify and logout
+PASS static preview never contacts a world or offers sign-in without an installed backend

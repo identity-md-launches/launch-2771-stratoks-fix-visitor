@@ -7,10 +7,10 @@ import { randomBytes } from 'node:crypto';
 import { startHudDemo } from '../../deploy/auth-demo/hud.mjs';
 import { addressFromPrivateKey, signForTests } from '../../server/src/wallet.js';
 const { chromium, webkit } = await import(pathToFileURL(process.argv[2] ?? '/opt/imd-tools/playwright-mcp/node_modules/playwright/index.mjs').href);
-const out = new URL('../../artifacts/visitor-auth/', import.meta.url);
+const out = process.argv[3] ? pathToFileURL(process.argv[3].replace(/\/?$/, '/')) : new URL('../../artifacts/visitor-auth/', import.meta.url);
 fs.mkdirSync(out, { recursive: true });
 const results = { wallets: 'Simulated EIP-6963/EIP-1193 providers; real disposable EIP-191 signer and real HTTP backend. No actual extensions/devices.', checks: [], errors: [], widths: [], contrast: [], webkit: 'not run' };
-const demo = await startHudDemo({ port: 0, tickMs: 250, auth: { perIpRequests: 600, globalRequests: 2000 } });
+const demo = await startHudDemo({ port: 0, tickMs: 250, auth: { perIpRequests: 600, perPeerSignups: 600, globalRequests: 2000 } });
 const browser = await chromium.launch({ headless: true });
 const key = randomBytes(32).toString('hex'), address = addressFromPrivateKey(key);
 let signMode = 'normal', entered, release;
@@ -168,17 +168,17 @@ try {
   });
   await check('late HTTP verification response after account switch is discarded and revoked', async () => {
     await page.getByRole('button', { name: 'Rabby · simulated', exact: true }).click();
-    const responseHeld = deferred(), allowResponse = deferred();
+    const responseHeld = deferred(), allowResponse = deferred(), responseDelivered = deferred();
     await page.route('**/api/auth/verify', async (route) => {
       const response = await route.fetch(); responseHeld.resolve(); await allowResponse.promise;
-      await route.fulfill({ response });
+      await route.fulfill({ response }); responseDelivered.resolve();
     });
     await sign(page).click(); await responseHeld.promise;
     assert.equal(demo.backend.auth.sessions.size, 1);
     await page.evaluate(() => window.testWallets[1].emit('accountsChanged', []));
     await status(page).filter({ hasText: 'Disconnected' }).waitFor();
     await until(() => demo.backend.auth.sessions.size === 0);
-    allowResponse.resolve(); await page.unroute('**/api/auth/verify', { behavior: 'wait' });
+    allowResponse.resolve(); await responseDelivered.promise; await page.unroute('**/api/auth/verify');
     await page.getByRole('button', { name: 'Rabby · simulated', exact: true }).click();
     await verify(page); await page.getByRole('button', { name: 'Sign out', exact: true }).click();
     await page.getByText('Signed out on the server.', { exact: true }).waitFor();
