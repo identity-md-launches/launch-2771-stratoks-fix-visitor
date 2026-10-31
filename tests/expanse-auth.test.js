@@ -172,7 +172,7 @@ test('per-peer/global rates and bounded rate-key map reject without affecting wo
   assert.equal((await a.request('/api/expanse/info')).status, 200);
   a.advance(1000); assert.equal((await a.request('/api/auth/config')).status, 200);
   const auth = a.svc.auth; auth.rates.clear(); auth.cfg.maxRateKeys = 1;
-  auth.rate('a'); assert.throws(() => auth.rate('b'), /rate_store_full/);
+  auth.rate('a'); auth.rate('b'); assert.equal(auth.rates.size, 1);
   a.advance(1000); auth.rate('b'); assert.equal(auth.rates.size, 1);
   auth.cfg.globalRequests = 1; assert.throws(() => auth.rate('b'), /rate_limited/);
 });
@@ -219,4 +219,42 @@ test('auth on a copied schema-4 populated world preserves identity through migra
   await svc.stop(); svc = startExpanse(settings); await once(svc.server, 'listening'); base = `http://127.0.0.1:${svc.server.address().port}`;
   assert.equal(identityDigest(svc.world.toState()), digest); assert.equal(svc.auth.profiles.get(address).visitCount, 1);
   const frame = await (await fetch(base + '/api/expanse/frame')).json(); assert.equal(frame.tick, original.tick); assert.equal(frame.residents.length, original.creatures.length);
+});
+
+test('review regressions: peer cannot exhaust global ceiling; capacity recovery; CORS Retry-After; rate-key eviction', async (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'va-'));
+  let now = 1e12;
+  const mk = (o) => new VisitorAuth({ dataDir: fs.mkdtempSync(path.join(dir, 'd')), uri: 'https://world.example/', now: () => now, perPeerSignups: 1000, ...o });
+  const O = 'https://world.example';
+  const signer = () => { const k = randomBytes(32).toString('hex'); return [addressFromPrivateKey(k), k]; };
+  const login = (au, [ad, k]) => { const c = au.issue({ address: ad, chainId: 1 }, O); return au.verify({ nonce: c.nonce, address: ad, chainId: 1, message: c.message, signature: signForTests(c.message, k) }, O); };
+  // 1: one peer cannot burn the global ceiling
+  let au = mk({ globalRequests: 600, perIpPollRequests: 240 });
+  for (let i = 0; i < 600; i++) try { au.rate('1.1.1.1', false); } catch {}
+  au.rate('2.2.2.2', true);
+  // 2: profile capacity recovery
+  au = mk({ maxProfiles: 3 });
+  for (let i = 0; i < 3; i++) { const s = signer(); const r = login(au, s); au.logout(r.token, O); }
+  assert.throws(() => login(au, signer()), /profile_store_full/);
+  now += 7 * 86400_000; login(au, signer());
+  // 3: session cap fairness
+  au = mk({ maxSessionsPerOrigin: 6 });
+  const a1 = signer(), a2 = signer(); for (let i = 0; i < 3; i++) { login(au, a1); login(au, a2); }
+  assert.ok(login(au, signer()).token);
+  // 5: rate-key store never locks out new peers
+  au = mk({ maxRateKeys: 4 });
+  for (let i = 0; i < 10; i++) au.signupRate(`2001:db8::${i}`.replace('::', `:${i}::`) );
+  au.rate('198.51.100.7', true);
+  // 4: CORS + Retry-After on early 429
+  const web = 'https://preview.example';
+  au = mk({ allowedOrigins: [web], globalRequests: 1 });
+  const srv = http.createServer((q, r) => { import('../server/src/expanse/visitor-auth.js').then((m) => m.handleVisitorAuth(q, r, au)); });
+  srv.listen(0); await once(srv, 'listening'); t.after(() => srv.close());
+  const url = `http://127.0.0.1:${srv.address().port}/api/auth/config`;
+  await fetch(url, { headers: { Origin: web } });
+  const res = await fetch(url, { headers: { Origin: web } });
+  assert.equal(res.status, 429); assert.equal(res.headers.get('access-control-allow-origin'), web);
+  assert.equal(res.headers.get('access-control-expose-headers'), 'Retry-After'); assert.equal(res.headers.get('retry-after'), '60');
+  const pre = await fetch(url, { method: 'OPTIONS', headers: { Origin: 'https://evil.example' } });
+  assert.equal(pre.headers.get('access-control-allow-origin'), null);
 });

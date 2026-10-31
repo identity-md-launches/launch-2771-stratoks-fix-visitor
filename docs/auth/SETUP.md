@@ -37,13 +37,13 @@ Only simulated EIP-1193/EIP-6963 providers have been tested here. Actual MetaMas
 5. Keep the existing `EXPANSE_DATA_DIR`, tick settings, seed configuration and world volume. Start `node server/src/expanse/server.js` (or `npm run start:expanse` in `server/`). With no `AUTH_URI` the service retains anonymous viewing and reports auth disabled. Bad auth configuration or corrupt private data also disables only authentication; CLI prints a generic diagnostic. Inspect configured URI/origins/chains and privately validate the store; never delete world data to fix login.
 6. Check `/healthz`, anonymous `/api/expanse/frame`, and `GET /api/auth/config`. Confirm the exact URI/domain/chains/world before signing. Then verify using a disposable empty account, check `/api/auth/session`, logout, and ensure the old bearer receives 401. No RPC/owner key/token deployment is required.
 
-Private data is stored at `<EXPANSE_DATA_DIR>/private-visitors/profiles-v1.json`, with mode 0600 in a mode 0700 directory. Profiles are retained for 90 days after last verification; a full store evicts only records past that retention, otherwise admission returns 429. This bounds the store without silently deleting active records. Authentication is not Sybil-proof. Active sessions default to 2,000 total, 3 per address and 500 per origin; they expire in memory and on restart. The directory contains a durable service identity and minimal private profiles, **no sessions or signing keys**. Preserve it for private backup/restore across restart. World snapshots/manifests/public frames/inspectors/exports omit it; a whole-volume backup is private and must not be distributed as a public world export.
+Private data is stored at `<EXPANSE_DATA_DIR>/private-visitors/profiles-v1.json`, with mode 0600 in a mode 0700 directory. Profiles expire 90 days after last verification. At capacity the least recently verified inactive profile (no live session) older than `profileMinRetentionMs` (default 24 h) is evicted to admit a new signer; if none qualifies admission returns 429 until one does. Visit history of evicted addresses is lost (disclosed retention); world and resident memory are never touched. This bounds the store without silently deleting active records. Authentication is not Sybil-proof. Active sessions default to 2,000 total, 3 per address and 500 per origin; at either cap the signer holding the most sessions loses its oldest one so one signer cannot monopolize capacity; they expire in memory and on restart. The directory contains a durable service identity and minimal private profiles, **no sessions or signing keys**. Preserve it for private backup/restore across restart. World snapshots/manifests/public frames/inspectors/exports omit it; a whole-volume backup is private and must not be distributed as a public world export.
 
 A profile write failure prevents login, not ticking/viewing. A malformed profile store disables auth at startup rather than silently replacing visit history. Keep the damaged file for diagnosis, restore a known-good private copy while stopped, and restart.
 
 ## Docker and ARM
 
-The pinned Node base image and both `server/` and `shared/` modules are copied with `node:node` ownership and readable/traversable permissions regardless of checkout umask. The import check runs after `USER node`. There are zero runtime npm dependencies and no architecture-specific native addon. The owner needs Docker Buildx plus native ARM or configured ARM emulation to prove the ARM image actually starts:
+The pinned Node base image and both `server/` and `shared/` modules are copied with `root:root` ownership (mode 0755, read-only to the runtime user) and readable/traversable permissions regardless of checkout umask. The import check runs after `USER node`. There are zero runtime npm dependencies and no architecture-specific native addon. The owner needs Docker Buildx plus native ARM or configured ARM emulation to prove the ARM image actually starts:
 
 ```sh
 # Repository-root build context is essential for the shared terrain/auth files.
@@ -52,7 +52,7 @@ sh deploy/expanse/check-auth-image.sh linux/arm64
 
 The intended owner check builds/loads the actual Dockerfile, starts as unprivileged `node` with disposable `/data`, checks imports, signs in with a disposable signer, checks session/logout and anonymous frames, and removes its container. Here, ARM build/start could not run: Docker's default config location was read-only; using a temporary config location then failed to connect to the Docker daemon because its socket denied access. ARM runtime evidence is unresolved and must not be inferred from Node tests.
 
-For an owner deployment, `deploy/expanse/compose.yml` forwards `AUTH_URI`, `AUTH_ALLOWED_ORIGINS`, `AUTH_CHAINS`, and `AUTH_TRUSTED_PROXIES`. The latter is a comma-separated exact socket peer address allowlist and defaults empty. Configure it only when Caddy reaches the backend from a stable private address. The Caddy rule above overwrites `X-Forwarded-For` with the TCP peer address; never append or pass through client-supplied forwarding values. Keep the backend bound privately (compose publishes host loopback 8788). Challenge/verify use the trusted client address for their per-peer limit; session checks retain a global ceiling but do not consume the sign-in bucket.
+For an owner deployment, `deploy/expanse/compose.yml` forwards `AUTH_URI`, `AUTH_ALLOWED_ORIGINS`, `AUTH_CHAINS`, and `AUTH_TRUSTED_PROXIES`. The latter is a comma-separated exact socket peer address allowlist and defaults empty. Configure it only when Caddy reaches the backend from a stable private address. The Caddy rule above overwrites `X-Forwarded-For` with the TCP peer address; never append or pass through client-supplied forwarding values. Keep the backend bound privately (compose publishes host loopback 8788). Challenge/verify use the trusted client address for their per-peer limit; session checks use a separate larger per-peer poll bucket (`perIpPollRequests`, 240/min) and requests rejected per peer do not consume the global ceiling, so one peer cannot exhaust it alone. IPv6 clients share a bucket per /64; the rate-key map evicts its oldest bucket instead of locking out new peers. Every auth response (including 429/503 and preflights) carries exact allowed-origin CORS headers and `Access-Control-Expose-Headers: Retry-After`. If Caddy `trusted_proxies` is configured (e.g. behind a CDN), keep the `header_up X-Forwarded-For {remote_host}` overwrite.
 
 ## Current HUD integration
 
@@ -67,7 +67,9 @@ For same-origin owner hosting, adapt the existing proxy rather than routing auth
 ```caddy
 {$STRATOKS_WORLD_DOMAIN} {
     handle /api/* {
-        reverse_proxy 127.0.0.1:8788
+        reverse_proxy 127.0.0.1:8788 {
+            header_up X-Forwarded-For {remote_host}   # overwrite, never append/pass through
+        }
     }
     handle /healthz {
         reverse_proxy 127.0.0.1:8788

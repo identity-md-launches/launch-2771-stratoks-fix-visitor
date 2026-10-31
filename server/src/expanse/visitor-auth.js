@@ -13,7 +13,7 @@ const defaults = {
   globalRequests: 600, bodyLimit: 8192, bodyTimeoutMs: 5000,
   maxConcurrentRequests: 128,
   profileRetentionMs: 90 * 24 * 60 * 60 * 1000, maxSessionsPerAddress: 3, maxSessionsPerOrigin: 500,
-  perPeerSignups: 10,
+  perPeerSignups: 10, perIpPollRequests: 240, profileMinRetentionMs: 24 * 60 * 60 * 1000,
 };
 const ROUTES = new Map([
   ['/api/auth/config', 'GET'], ['/api/auth/nonce', 'POST'], ['/api/auth/verify', 'POST'],
@@ -23,6 +23,14 @@ function originURL(value, local) {
   const u = new URL(value);
   if (u.origin !== value || (u.protocol !== 'https:' && !(local && u.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(u.hostname)))) throw new Error('auth origins require exact HTTPS origins (or explicit local demo HTTP)');
   return u;
+}
+// IPv6 clients are bucketed by /64 so one allocation cannot mint unlimited rate keys.
+function rateKey(ip) {
+  if (typeof ip !== 'string' || !ip.includes(':') || ip.includes('.')) return ip;
+  const [head, tail = null] = ip.split('::');
+  const a = head ? head.split(':') : [], b = tail === null ? [] : tail ? tail.split(':') : [];
+  const groups = tail === null ? a : [...a, ...Array(Math.max(0, 8 - a.length - b.length)).fill('0'), ...b];
+  return `${groups.slice(0, 4).map((g) => g.toLowerCase().replace(/^0+(?=.)/, '')).join(':')}::/64`;
 }
 function exactObject(o, keys) {
   if (!o || typeof o !== 'object' || Array.isArray(o) || Object.keys(o).length !== keys.length || !keys.every((k) => Object.hasOwn(o, k))) throw fail(400, 'invalid_body');
@@ -89,24 +97,27 @@ export class VisitorAuth {
     const first = forwarded.split(',')[0].trim();
     return first && !/[\s%]/.test(first) ? first : peer;
   }
-  rate(ip, peerLimited = true) {
-    this.gc(); const now = this.now();
+  bucket(key, limit, code) {
+    const now = this.now();
+    let r = this.rates.get(key);
+    if (!r) {
+      if (this.rates.size >= this.cfg.maxRateKeys) { // bounded: drop the least recently started bucket rather than lock out new peers
+        const oldest = this.rates.keys().next().value;
+        this.rates.delete(oldest);
+      }
+      this.rates.set(key, r = { start: now, count: 0 });
+    }
+    if (++r.count > limit) throw fail(429, code);
+  }
+  // Per-peer checks run first; only requests that pass them consume the global ceiling, so one peer cannot exhaust it alone.
+  rate(ip, protectedRoute = true) {
+    this.gc(); const now = this.now(); const k = rateKey(ip);
+    if (protectedRoute) this.bucket(k, this.cfg.perIpRequests, 'rate_limited');
+    else this.bucket(`poll:${k}`, this.cfg.perIpPollRequests, 'rate_limited');
     if (this.global.start + this.cfg.rateWindowMs <= now) this.global = { start: now, count: 0 };
     if (++this.global.count > this.cfg.globalRequests) throw fail(429, 'rate_limited');
-    if (!peerLimited) return;
-    let r = this.rates.get(ip);
-    if (!r) {
-      if (this.rates.size >= this.cfg.maxRateKeys) throw fail(429, 'rate_store_full');
-      this.rates.set(ip, r = { start: now, count: 0 });
-    }
-    if (++r.count > this.cfg.perIpRequests) throw fail(429, 'rate_limited');
   }
-  signupRate(ip) {
-    const now = this.now(), key = `signup:${ip}`;
-    let r = this.rates.get(key);
-    if (!r) { if (this.rates.size >= this.cfg.maxRateKeys) throw fail(429, 'rate_store_full'); this.rates.set(key, r = { start: now, count: 0 }); }
-    if (++r.count > this.cfg.perPeerSignups) throw fail(429, 'signup_rate_limited');
-  }
+  signupRate(ip) { this.bucket(`signup:${rateKey(ip)}`, this.cfg.perPeerSignups, 'signup_rate_limited'); }
   config() {
     return { version: 1, enabled: true, uri: this.uri, domain: this.domain, world: this.world, chains: this.chains,
       nonceTtlMs: this.cfg.nonceTtlMs, sessionTtlMs: this.cfg.sessionTtlMs, transport: 'memory-bearer', sessionsSurviveRestart: false };
@@ -143,16 +154,27 @@ export class VisitorAuth {
     if (signer !== c.address) throw fail(401, 'wrong_signer');
     this.gc();
     const addressSessions = [...this.sessions.values()].filter((s) => s.address === c.address).length;
-    const originSessions = [...this.sessions.values()].filter((s) => s.origin === origin).length;
-    if (this.sessions.size >= this.cfg.maxSessions || addressSessions >= this.cfg.maxSessionsPerAddress || originSessions >= this.cfg.maxSessionsPerOrigin) throw fail(429, 'session_store_full');
+    if (addressSessions >= this.cfg.maxSessionsPerAddress) throw fail(429, 'session_store_full');
+    // At capacity, the address holding the most sessions loses its oldest one, so no signer can monopolize the store.
+    const evictFrom = (pred) => {
+      const mine = [...this.sessions].filter(([, s]) => pred(s)), counts = new Map();
+      for (const [, s] of mine) counts.set(s.address, (counts.get(s.address) ?? 0) + 1);
+      const [top, n] = [...counts].sort((a, b) => b[1] - a[1])[0] ?? [];
+      if (!top || n < 2 || top === c.address) return false;
+      this.sessions.delete(mine.filter(([, s]) => s.address === top).sort((a, b) => a[1].expiresAt - b[1].expiresAt)[0][0]);
+      return true;
+    };
+    if (this.sessions.size >= this.cfg.maxSessionsPerOrigin && [...this.sessions.values()].filter((s) => s.origin === origin).length >= this.cfg.maxSessionsPerOrigin && !evictFrom((s) => s.origin === origin)) throw fail(429, 'session_store_full');
+    if (this.sessions.size >= this.cfg.maxSessions && !evictFrom(() => true)) throw fail(429, 'session_store_full');
     const previous = this.profiles.get(c.address);
     const now = this.now();
     const next = new Map(this.profiles);
     const activeAddresses = new Set([...this.sessions.values()].map((s) => s.address));
     for (const [a, p] of next) if (!activeAddresses.has(a) && p.lastVerifiedAt + this.cfg.profileRetentionMs <= now) next.delete(a);
     if (!next.has(c.address) && next.size >= this.cfg.maxProfiles) {
-      const [oldest, profile] = [...next].sort((a,b) => a[1].lastVerifiedAt - b[1].lastVerifiedAt)[0] ?? [];
-      if (oldest && !activeAddresses.has(oldest) && profile.lastVerifiedAt + this.cfg.profileRetentionMs <= now) next.delete(oldest);
+      // Capacity recovery: evict the least recently verified inactive profile once it is past the minimum retention.
+      const [oldest, profile] = [...next].filter(([a]) => !activeAddresses.has(a)).sort((a, b) => a[1].lastVerifiedAt - b[1].lastVerifiedAt)[0] ?? [];
+      if (oldest && profile.lastVerifiedAt + Math.min(this.cfg.profileMinRetentionMs, this.cfg.profileRetentionMs) <= now) next.delete(oldest);
     }
     if (!next.has(c.address) && next.size >= this.cfg.maxProfiles) throw fail(429, 'profile_store_full');
     const retained = next.get(c.address);
@@ -227,6 +249,13 @@ export async function handleVisitorAuth(req, res, auth) {
   let u;
   try { u = new URL(req.url, 'http://internal'); } catch { json(res, 400, { error: 'invalid_url' }); return true; }
   if (u.pathname !== '/api/auth' && !u.pathname.startsWith('/api/auth/')) return false;
+  // Exact allowed-origin CORS headers on every auth response, including early 429/503, so Retry-After is readable cross-origin.
+  const rawO = req.headers.origin;
+  if (auth && rawO && auth.origins.has(rawO)) {
+    res.setHeader('access-control-allow-origin', rawO);
+    res.setHeader('access-control-expose-headers', 'Retry-After');
+    res.setHeader('vary', 'Origin');
+  }
   if (auth && auth.activeRequests >= auth.cfg.maxConcurrentRequests) {
     res.setHeader('retry-after', '1'); json(res, 503, { version: 1, error: 'auth_busy' }); req.resume(); return true;
   }
@@ -246,10 +275,6 @@ export async function handleVisitorAuth(req, res, auth) {
     const origin = rawOrigin ?? claimed;
     if (rawOrigin && claimed && rawOrigin !== claimed) throw fail(403, 'origin_mismatch');
     if (origin && !auth.origins.has(origin)) throw fail(403, 'origin_not_allowed');
-    if (rawOrigin && auth.origins.has(rawOrigin)) {
-      res.setHeader('access-control-allow-origin', rawOrigin);
-      res.setHeader('vary', 'Origin');
-    }
     if (req.method === 'OPTIONS') {
       if (!origin) throw fail(403, 'origin_required');
       const headers = (req.headers['access-control-request-headers'] ?? '').toLowerCase().split(',').map((h) => h.trim()).filter(Boolean);
